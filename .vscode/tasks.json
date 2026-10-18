@@ -1,0 +1,8 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    { "label": "Flosted: App bauen", "type": "process", "command": "/bin/bash", "args": ["${workspaceFolder}/scripts/build-app.sh"], "group": { "kind": "build", "isDefault": true }, "problemMatcher": [] },
+    { "label": "Flosted: Starten", "type": "process", "command": "/bin/bash", "args": ["${workspaceFolder}/Starten.command"], "problemMatcher": [] },
+    { "label": "Flosted: Tests", "type": "process", "command": "swift", "args": ["test", "--cache-path", "${workspaceFolder}/.build/cache", "--config-path", "${workspaceFolder}/.build/config", "--security-path", "${workspaceFolder}/.build/security"], "problemMatcher": [] }
+  ]
+}

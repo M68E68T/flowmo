@@ -1,0 +1,149 @@
+import AppKit
+import SwiftUI
+import FlostedCore
+
+/// Looks a text up in Bundle.main. SwiftUI resolves plain string *literals*
+/// on its own; this is for AppKit titles and for texts with inserted values,
+/// where interpolating into the literal would corrupt the key.
+func tr(_ key: String, _ args: CVarArg...) -> String {
+    let format = NSLocalizedString(key, comment: "")
+    return args.isEmpty ? format : String(format: format, arguments: args)
+}
+
+enum ReferenceStyle {
+    static let accent = Color(nsColor: BrandMark.accent)
+    /// Same colour for the AppKit canvases that draw with CoreGraphics.
+    static let accentCG = BrandMark.accent.cgColor
+    static let ink = Color(red: 0.13, green: 0.10, blue: 0.07)
+    static let windowRadius: CGFloat = 20
+}
+
+struct ReferenceGlass: NSViewRepresentable {
+    func makeNSView(context: Context) -> NSVisualEffectView {
+        let view = NSVisualEffectView()
+        view.material = .popover
+        view.blendingMode = .behindWindow
+        view.state = .active
+        view.appearance = NSAppearance(named: .aqua)
+        return view
+    }
+    func updateNSView(_ view: NSVisualEffectView, context: Context) {}
+}
+
+struct ReferenceSurface<Content: View>: View {
+    @ViewBuilder var content: Content
+    var body: some View {
+        ZStack {
+            ReferenceGlass()
+            Color(red: 1, green: 0.71, blue: 0.34).opacity(0.08)
+            content
+        }
+        .foregroundStyle(ReferenceStyle.ink)
+        .preferredColorScheme(.light)
+        .clipShape(RoundedRectangle(cornerRadius: ReferenceStyle.windowRadius, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: ReferenceStyle.windowRadius, style: .continuous).strokeBorder(.black.opacity(0.16), lineWidth: 0.7))
+    }
+}
+
+struct ReferenceHeader: View {
+    let title: String
+    let close: () -> Void
+    var body: some View {
+        ZStack {
+            Text(title).font(.system(size: 13, weight: .semibold))
+            HStack {
+                Button(action: close) {
+                    Image(systemName: "xmark").font(.system(size: 9, weight: .semibold))
+                        .frame(width: 22, height: 22).background(.black.opacity(0.055), in: Circle())
+                }.buttonStyle(.plain).accessibilityLabel(Text("common.close"))
+                Spacer()
+            }.padding(.horizontal, 13)
+        }.frame(height: 40)
+        .overlay(alignment: .bottom) { Rectangle().fill(.black.opacity(0.075)).frame(height: 0.6) }
+    }
+}
+
+struct ReferenceSegments: View {
+    let values: [(String, Double)]
+    @Binding var selection: Double
+    var body: some View {
+        HStack(spacing: 1) {
+            ForEach(values, id: \.0) { label, value in
+                Button { selection = value } label: {
+                    Text(label).font(.system(size: 10.5, weight: selection == value ? .medium : .regular))
+                        .frame(maxWidth: .infinity).frame(height: 21)
+                        .foregroundStyle(selection == value ? .white : ReferenceStyle.ink)
+                        .background(selection == value ? ReferenceStyle.accent : .clear, in: RoundedRectangle(cornerRadius: 4))
+                }.buttonStyle(.plain)
+            }
+        }.padding(2).background(.black.opacity(0.065), in: RoundedRectangle(cornerRadius: 6))
+    }
+}
+
+struct ReferenceActionButton: ButtonStyle {
+    var primary = false
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label.font(.system(size: 11, weight: primary ? .semibold : .regular))
+            .padding(.horizontal, 10).frame(height: 23)
+            .foregroundStyle(primary ? Color.white : ReferenceStyle.ink)
+            .background(primary ? ReferenceStyle.accent.opacity(configuration.isPressed ? 0.75 : 1) : Color.black.opacity(configuration.isPressed ? 0.12 : 0.065), in: RoundedRectangle(cornerRadius: 5))
+            .overlay(RoundedRectangle(cornerRadius: 5).strokeBorder(primary ? Color.black.opacity(0.13) : .clear, lineWidth: 0.5))
+    }
+}
+
+final class ReferenceWindow: NSWindow {
+    override var canBecomeKey: Bool { true }
+    override var canBecomeMain: Bool { true }
+    init(size: CGSize, title: String, resizable: Bool = false) {
+        var mask: NSWindow.StyleMask = [.borderless]
+        if resizable { mask.insert(.resizable) }
+        super.init(contentRect: CGRect(origin: .zero, size: size), styleMask: mask, backing: .buffered, defer: false)
+        self.title = title
+        isOpaque = false; backgroundColor = .clear; hasShadow = true
+        isMovableByWindowBackground = true; isReleasedWhenClosed = false
+        appearance = NSAppearance(named: .aqua)
+    }
+}
+
+struct ReferenceSlider: View {
+    let title: LocalizedStringKey
+    @Binding var value: Double
+    var body: some View {
+        VStack(alignment: .leading, spacing: 3) {
+            HStack {
+                // fixedSize: squeeze the spacer, never break the words.
+                Text(title).font(.system(size: 10.5)).fixedSize()
+                Spacer(minLength: 8)
+                Text("\(Int(value * 100)) %").font(.system(size: 10)).foregroundStyle(.secondary)
+                    .monospacedDigit().fixedSize()
+            }
+            Slider(value: $value, in: Preferences.opacityRange).controlSize(.mini)
+                .tint(ReferenceStyle.accent)
+        }
+    }
+}
+
+/// Four modifier toggles in the usual macOS order.
+struct ModifierPicker: View {
+    @Binding var combo: ModifierCombo
+    var body: some View {
+        HStack(spacing: 5) {
+            ForEach(ModifierCombo.ordered, id: \.symbol) { entry in
+                let on = combo.contains(entry.key)
+                Button {
+                    if on { combo.remove(entry.key) } else { combo.insert(entry.key) }
+                } label: {
+                    Text(entry.symbol)
+                        .font(.system(size: 14, weight: on ? .semibold : .regular))
+                        .frame(maxWidth: .infinity).frame(height: 30)
+                        .foregroundStyle(on ? .white : ReferenceStyle.ink)
+                        .background(on ? ReferenceStyle.accent : .black.opacity(0.065),
+                                    in: RoundedRectangle(cornerRadius: 6))
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel(Text(LocalizedStringKey(entry.name)))
+                .accessibilityAddTraits(on ? .isSelected : [])
+            }
+        }
+    }
+}

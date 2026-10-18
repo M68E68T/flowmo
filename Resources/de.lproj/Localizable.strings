@@ -1,0 +1,237 @@
+/* Menüleiste und Hauptmenü */
+"menu.open" = "Flosted öffnen";
+"menu.settings" = "Einstellungen …";
+"menu.quit" = "Flosted beenden";
+"menu.file" = "Datei";
+"menu.chooseFiles" = "Dateien auswählen …";
+
+/* Hauptfenster */
+"dashboard.tools" = "Werkzeuge";
+"dashboard.settings" = "Einstellungen";
+"dashboard.dragHint" = "Datei ziehen, dann %@ drücken.";
+"dashboard.legend" = "%1$@  Formate     %2$@  Werkzeuge";
+"dashboard.legendNoTools" = "%@  Formate";
+"dashboard.docxNote" = "DOCX: Text und Grundformatierung. Komplexe PDF-Layouts werden nicht originalgetreu rekonstruiert.";
+"dashboard.chooseFiles" = "Dateien auswählen …";
+"dashboard.trySample" = "Beispiel testen";
+"dashboard.showInFinder" = "Im Finder zeigen";
+"dashboard.fileCount" = "%d Dateien";
+"common.close" = "Schließen";
+"common.ok" = "OK";
+
+/* Statuszeile */
+"status.ready" = "Bereit · Datei ziehen und %@ drücken.";
+"status.creating" = "%@ wird erstellt …";
+"status.none" = "Keine Datei erstellt.";
+"status.saved" = "%d neue Datei(en) neben dem Original gespeichert.";
+"status.savedAs" = "Gespeichert: %@";
+"status.loadingImage" = "Bild wird geladen …";
+"status.opened" = "%@ geöffnet.";
+"status.selected" = "%d Datei(en) ausgewählt · Format im Kreis wählen.";
+"status.unsupportedSelection" = "Bitte Bilder, PDFs oder Textdokumente desselben Typs auswählen.";
+"status.unsupportedDrag" = "Bitte Bilder, PDFs oder Textdokumente desselben Typs ziehen.";
+"status.noTools" = "Für diese Auswahl sind keine Bildwerkzeuge verfügbar.";
+"status.menuOpen" = "Kreis-Menü geöffnet · %d Datei(en)";
+"status.convertedWithErrors" = "Konvertierung mit Fehlern · Flosted öffnen";
+
+/* Einstellungen */
+"settings.title" = "Einstellungen";
+"settings.openCombo" = "Menü öffnen";
+"settings.openComboHint" = "Diese Tasten während des Ziehens drücken.";
+"settings.toolsExtra" = "Werkzeuge zusätzlich";
+"settings.toolsExtraHint" = "Zusätzlich gedrückt: Zuschnitt, Hintergrund und Komprimieren.";
+"settings.commandNote" = "⌘ beim Ziehen bedeutet im Finder „Bewegen“ statt „Kopieren“.";
+"settings.menuOpacity" = "Deckkraft Kreis-Menü";
+"settings.reset" = "Zurücksetzen";
+"settings.apply" = "Übernehmen";
+"settings.problem.openComboEmpty" = "Mindestens eine Taste zum Öffnen wählen.";
+"settings.problem.combosOverlap" = "Werkzeug-Tasten müssen sich von den Öffnen-Tasten unterscheiden.";
+
+/* Modifier */
+"modifier.control" = "Control";
+"modifier.option" = "Option";
+"modifier.shift" = "Umschalt";
+"modifier.command" = "Befehl";
+
+/* Bildwerkzeuge */
+"editor.crop" = "Zuschneiden";
+"editor.background" = "Hintergrund";
+"editor.compress" = "Komprimieren";
+"editor.aspectRatio" = "Seitenverhältnis";
+"editor.backgroundLabel" = "Hintergrund";
+"editor.ratio" = "Format";
+"editor.estimatedSize" = "Geschätzte Größe: %@";
+"editor.gradient" = "Verlauf %d";
+"editor.solidColor" = "Vollfarbe %d";
+"editor.chooseBackdrop" = "Hintergrundbild wählen";
+"editor.reset" = "Zurücksetzen";
+
+/* Fehlermeldungen */
+"error.unreadable" = "Diese Datei lässt sich nicht öffnen oder das Format wird nicht unterstützt.";
+"error.animatedImage" = "Animierte oder mehrseitige Bilddateien werden nicht in ein Einzelbild umgewandelt.";
+"error.unsupportedOutput" = "Dieses Ausgabeformat ist auf diesem Mac nicht verfügbar.";
+"error.encoding" = "Die Ausgabedatei konnte nicht erstellt werden.";
+"error.lockedPDF" = "Das PDF ist verschlüsselt. Bitte zuerst eine entsperrte Kopie erstellen.";
+"error.noText" = "Es wurde kein Text gefunden. Auch die lokale Texterkennung lieferte kein Ergebnis.";
+"error.tooLarge" = "Die Bildabmessungen sind zu groß. Bitte eine kleinere Datei verwenden.";
+
+/* Beispielbild */
+"sample.headline" = "Hallo, Flosted.";
+"sample.subline" = "Ziehen. Taste. Fertig.";
+
+/* Editor-Aktionen */
+"editor.saveWithBackground" = "Mit Hintergrund sichern";
+"editor.apply" = "Übernehmen";
+"editor.save" = "Sichern";
+
+"menu.wheelLabel" = "Flosted Formatmenü";
+
+/* Editor-Beschriftungen, die bisher englisch geblieben waren */
+"editor.padding" = "Rand";
+"editor.corners" = "Ecken";
+"editor.shadow" = "Schatten";
+"editor.quality" = "Qualität";
+"editor.scale" = "Größe";
+"editor.width" = "Breite";
+"editor.height" = "Höhe";
+"editor.ratioFree" = "Frei";
+"editor.ratioAuto" = "Auto";
+"editor.customColor" = "Eigene Farbe";
+"editor.targetSize" = "Höchstgröße";
+"editor.targetSizeOff" = "aus";
+"editor.targetSizeHint" = "0 bedeutet: keine Begrenzung. Sonst wird die Qualität so weit gesenkt, bis die Datei unter diesen Wert passt.";
+"editor.saveFailed" = "Speichern nicht möglich";
+"error.sizeLimit" = "Die Zielgröße ist mit dieser Auflösung nicht erreichbar. Bitte die Größe verringern oder ein höheres Limit wählen.";
+
+/* Erklärungen beim Daraufzeigen */
+"help.tools" = "Zeigt im Kreis Zuschneiden, Hintergrund und Komprimieren statt der Ausgabeformate.";
+"help.settings" = "Tastenkombination und Deckkraft einstellen.";
+"help.chooseFiles" = "Dateien zum Umwandeln auswählen.";
+"help.trySample" = "Erzeugt ein Beispielbild, damit du den Ablauf ohne eigene Datei ausprobieren kannst.";
+"help.showInFinder" = "Zeigt die zuletzt erstellten Dateien im Finder.";
+"help.wheel" = "Dateien hierher ziehen oder ein Format im Kreis anklicken.";
+"help.aspectRatio" = "Begrenzt den Zuschnitt auf ein festes Seitenverhältnis.";
+"help.cropSize" = "Breite und Höhe des Ausschnitts in Pixeln. Mit Enter bestätigen.";
+"help.presets" = "Fertiger Farbverlauf als Hintergrund.";
+"help.solids" = "Einfarbiger Hintergrund.";
+"help.chooseBackdrop" = "Eigenes Bild als Hintergrund verwenden.";
+"help.customColor" = "Freie Farbe als Hintergrund wählen.";
+"help.padding" = "Abstand zwischen Bild und Rand des Hintergrunds.";
+"help.corners" = "Rundet die Ecken des Bildes ab.";
+"help.shadow" = "Stärke des Schlagschattens unter dem Bild.";
+"help.ratio" = "Seitenverhältnis der fertigen Grafik.";
+"help.quality" = "JPG-Qualität. Weniger Qualität bedeutet kleinere Datei.";
+"help.scale" = "Verkleinert das Bild vor dem Speichern.";
+"help.targetSize" = "Gewünschte Höchstgröße in Kilobyte. 0 schaltet die Begrenzung aus.";
+"help.resetEditor" = "Stellt alle Regler dieses Fensters wieder her.";
+"help.saveEditor" = "Speichert das Ergebnis als neue Datei neben dem Original.";
+"help.settingsOpenCombo" = "Diese Tasten halten, während du eine Datei im Finder ziehst.";
+"help.settingsToolsExtra" = "Zusätzlich zu den oberen Tasten halten, um die Bildwerkzeuge zu öffnen.";
+"help.settingsOpacity" = "Deckkraft des schwebenden Kreis-Menüs. Je weiter links, desto durchsichtiger. Die Fenster bleiben immer deckend.";
+"help.settingsReset" = "Setzt auf die Werkseinstellung zurück. Wirkt erst mit „Übernehmen“.";
+"help.settingsApply" = "Speichert die Einstellungen und schließt das Fenster.";
+
+"dashboard.dropHint" = "Oder Dateien in den Kreis ziehen.";
+
+/* Annotieren */
+"editor.annotate" = "Bearbeiten";
+"editor.textTitle" = "Text eingeben";
+"editor.textPlaceholder" = "Text";
+"editor.color" = "Farbe";
+"editor.deleteElement" = "Löschen";
+"editor.pageOf" = "Seite %1$d von %2$d";
+"editor.elementsOnPage" = "%d Element(e) auf dieser Seite";
+"editor.redactionWarning" = "Geschwärzte Seiten werden zu einem Bild. Der Text darauf ist danach dauerhaft entfernt und nicht mehr durchsuchbar.";
+"common.cancel" = "Abbrechen";
+"tool.select" = "Auswählen";
+"tool.text" = "Text";
+"tool.signature" = "Signatur";
+"tool.arrow" = "Pfeil";
+"tool.rectangle" = "Rechteck";
+"tool.highlight" = "Hervorheben";
+"tool.redaction" = "Schwärzen";
+"help.tool.select" = "Vorhandene Elemente anklicken und verschieben.";
+"help.tool.text" = "Rahmen aufziehen und Text eingeben.";
+"help.tool.signature" = "Unterschrift einsetzen. Beim ersten Mal öffnet sich das Zeichenfenster.";
+"help.tool.arrow" = "Pfeil ziehen, von unten links nach oben rechts.";
+"help.tool.rectangle" = "Rahmen zum Markieren zeichnen.";
+"help.tool.highlight" = "Textstelle farbig hinterlegen, der Text bleibt lesbar.";
+"help.tool.redaction" = "Stelle dauerhaft unkenntlich machen. Der Text wird wirklich entfernt, nicht nur verdeckt.";
+"help.annotationColor" = "Farbe für neue und ausgewählte Elemente.";
+"help.annotationSize" = "Schriftgröße für Textelemente.";
+"help.deleteElement" = "Ausgewähltes Element entfernen. Geht auch mit der Rückschritttaste.";
+
+/* Signatur */
+"signature.title" = "Signatur";
+"signature.drawHint" = "Mit Maus oder Trackpad auf der Linie unterschreiben.";
+"signature.threshold" = "Weiß entfernen";
+"signature.clear" = "Neu";
+"signature.import" = "Foto laden …";
+"signature.use" = "Übernehmen";
+"signature.saved" = "Gespeicherte Signaturen";
+"signature.delete" = "Löschen";
+"help.signatureThreshold" = "Je weiter rechts, desto mehr helle Bildpunkte werden durchsichtig.";
+"help.signatureImport" = "Foto einer Unterschrift auf Papier laden. Der weiße Hintergrund wird entfernt.";
+"help.signatureReuse" = "Anklicken, um diese Signatur zu verwenden. Rechtsklick zum Löschen.";
+
+/* Seiten verwalten */
+"pages.title" = "Seiten";
+"pages.rotateLeft" = "Links drehen";
+"pages.rotateRight" = "Rechts drehen";
+"pages.delete" = "Löschen";
+"pages.append" = "Datei anhängen …";
+"pages.selectAll" = "Alle auswählen";
+"pages.count" = "%d Seite(n)";
+"help.pagesRotate" = "Dreht die ausgewählten Seiten um 90 Grad.";
+"help.pagesDelete" = "Entfernt die ausgewählten Seiten. Mindestens eine Seite muss übrig bleiben.";
+"help.pagesAppend" = "Hängt die Seiten eines weiteren PDFs oder ein Bild als neue Seite an.";
+"help.pagesReorder" = "Anklicken zum Auswählen, mit Umschalt mehrere. Ziehen ändert die Reihenfolge.";
+
+/* Einleitung */
+"menu.intro" = "Einleitung";
+"intro.title" = "Willkommen bei Flosted";
+"intro.welcome.title" = "Dateien umwandeln und bearbeiten";
+"intro.welcome.body" = "Flosted sitzt in der Menüleiste und hilft überall dort, wo du gerade arbeitest — direkt im Finder.";
+"intro.welcome.point1" = "Bilder, PDFs und Textdokumente in andere Formate umwandeln.";
+"intro.welcome.point2" = "Zuschneiden, Hintergründe, Komprimieren, Text und Unterschriften.";
+"intro.welcome.point3" = "Alles läuft auf deinem Mac. Nichts wird hochgeladen, Originale bleiben unverändert.";
+"intro.convert.title" = "So geht's";
+"intro.convert.body" = "Zieh im Finder eine Datei und halte dabei %@ gedrückt. Genau dieses Rad erscheint dann am Mauszeiger.";
+"intro.convert.hint" = "Auf das gewünschte Format ziehen und loslassen. Die neue Datei liegt danach neben dem Original. Abbrechen mit Escape.";
+"intro.edit.title" = "Bearbeiten und Unterschreiben";
+"intro.edit.body" = "Hältst du stattdessen %@, zeigt das Rad die Werkzeuge für eine einzelne Datei.";
+"intro.edit.hint" = "Mit „Bearbeiten“ setzt du Text, Unterschrift, Pfeile oder Schwärzungen ein. Bei PDFs ordnest du mit „Seiten“ die Seiten.";
+"intro.ready.title" = "Bereit";
+"intro.ready.body" = "Das war alles, was du zum Anfangen brauchst.";
+"intro.ready.point1" = "Das Fenster darf zu — Flosted bleibt oben in der Menüleiste aktiv.";
+"intro.ready.point2" = "Dort findest du auch die Einstellungen und diese Einleitung.";
+"intro.ready.point3" = "Welche Taste das Rad öffnet, kannst du in den Einstellungen ändern.";
+"intro.loadSample" = "Beispiel laden und ausprobieren";
+"intro.back" = "Zurück";
+"intro.next" = "Weiter";
+"intro.finish" = "Fertig";
+
+"editor.unfinished" = "Unfertige Elemente werden nicht gespeichert: Textfelder ohne Text und Rahmen ohne Signatur.";
+"editor.rotation" = "Drehung";
+"editor.rotationReset" = "Gerade";
+"editor.changeText" = "Text ändern";
+"help.rotation" = "Dreht das ausgewählte Element. „Gerade“ stellt es wieder aufrecht.";
+"help.changeText" = "Text des ausgewählten Feldes ändern. Ein Doppelklick darauf geht auch.";
+"pages.dropHint" = "Bilder oder PDFs hierher ziehen, um Seiten hinzuzufügen.";
+
+/* Kurze Beschriftungen im Kreis-Menü */
+"wheel.crop" = "Zuschneiden";
+"wheel.background" = "Hintergrund";
+"wheel.compress" = "Komprimieren";
+"wheel.annotate" = "Bearbeiten";
+"wheel.pages" = "Seiten";
+"editor.widthShort" = "B";
+"editor.heightShort" = "H";
+"editor.zoomFit" = "Einpassen";
+"editor.zoomFitShort" = "Passend";
+"editor.resetTitle" = "Alle Elemente entfernen?";
+"editor.resetMessage" = "Alles, was du eingefügt hast, wird verworfen. Mit Rückgängig lässt es sich zurückholen.";
+"editor.resetConfirm" = "Entfernen";
+"help.undo" = "Letzten Schritt zurücknehmen (Befehl-Z).";
+"help.redo" = "Zurückgenommenen Schritt wiederherstellen (Umschalt-Befehl-Z).";
+"help.zoom" = "Ansicht vergrößern oder verkleinern. „Einpassen“ zeigt die ganze Seite.";

@@ -1,0 +1,237 @@
+/* Menu bar and main menu */
+"menu.open" = "Open Flosted";
+"menu.settings" = "Settings…";
+"menu.quit" = "Quit Flosted";
+"menu.file" = "File";
+"menu.chooseFiles" = "Choose Files…";
+
+/* Main window */
+"dashboard.tools" = "Tools";
+"dashboard.settings" = "Settings";
+"dashboard.dragHint" = "Drag a file, then press %@.";
+"dashboard.legend" = "%1$@  Formats     %2$@  Tools";
+"dashboard.legendNoTools" = "%@  Formats";
+"dashboard.docxNote" = "DOCX: text and basic formatting. Complex PDF layouts are not reproduced faithfully.";
+"dashboard.chooseFiles" = "Choose files…";
+"dashboard.trySample" = "Try sample";
+"dashboard.showInFinder" = "Show in Finder";
+"dashboard.fileCount" = "%d files";
+"common.close" = "Close";
+"common.ok" = "OK";
+
+/* Status line */
+"status.ready" = "Ready · Drag a file and press %@.";
+"status.creating" = "Creating %@ …";
+"status.none" = "No file created.";
+"status.saved" = "Saved %d new file(s) next to the original.";
+"status.savedAs" = "Saved: %@";
+"status.loadingImage" = "Loading image …";
+"status.opened" = "%@ opened.";
+"status.selected" = "%d file(s) selected · pick a format in the wheel.";
+"status.unsupportedSelection" = "Please select images, PDFs or text documents of the same type.";
+"status.unsupportedDrag" = "Please drag images, PDFs or text documents of the same type.";
+"status.noTools" = "No image tools are available for this selection.";
+"status.menuOpen" = "Wheel open · %d file(s)";
+"status.convertedWithErrors" = "Conversion finished with errors · open Flosted";
+
+/* Settings */
+"settings.title" = "Settings";
+"settings.openCombo" = "Open menu";
+"settings.openComboHint" = "Hold these keys while dragging.";
+"settings.toolsExtra" = "Tools modifier";
+"settings.toolsExtraHint" = "Held in addition: Crop, Add BG and Compress.";
+"settings.commandNote" = "Holding ⌘ while dragging means “move” instead of “copy” in Finder.";
+"settings.menuOpacity" = "Wheel opacity";
+"settings.reset" = "Reset";
+"settings.apply" = "Apply";
+"settings.problem.openComboEmpty" = "Pick at least one key to open the menu.";
+"settings.problem.combosOverlap" = "Tools keys must differ from the keys that open the menu.";
+
+/* Modifiers */
+"modifier.control" = "Control";
+"modifier.option" = "Option";
+"modifier.shift" = "Shift";
+"modifier.command" = "Command";
+
+/* Image tools */
+"editor.crop" = "Crop Image";
+"editor.background" = "Add BG";
+"editor.compress" = "Compress Image";
+"editor.aspectRatio" = "Aspect ratio";
+"editor.backgroundLabel" = "Background";
+"editor.ratio" = "Ratio";
+"editor.estimatedSize" = "Estimated size: %@";
+"editor.gradient" = "Gradient %d";
+"editor.solidColor" = "Solid color %d";
+"editor.chooseBackdrop" = "Choose background image";
+"editor.reset" = "Reset";
+
+/* Error messages */
+"error.unreadable" = "This file cannot be opened, or its format is unsupported.";
+"error.animatedImage" = "Animated or multipage image files are not reduced to a single frame.";
+"error.unsupportedOutput" = "This output format is not available on this Mac.";
+"error.encoding" = "The output file could not be created.";
+"error.lockedPDF" = "This PDF is encrypted. Please create an unlocked copy first.";
+"error.noText" = "No text found. Local text recognition did not return a result either.";
+"error.tooLarge" = "The image dimensions are too large. Please use a smaller file.";
+
+/* Sample image */
+"sample.headline" = "Hello, Flosted.";
+"sample.subline" = "Drag. Press. Done.";
+
+/* Editor actions */
+"editor.saveWithBackground" = "Save with Background";
+"editor.apply" = "Apply";
+"editor.save" = "Save";
+
+"menu.wheelLabel" = "Flosted format menu";
+
+/* Editor labels that had stayed English */
+"editor.padding" = "Padding";
+"editor.corners" = "Corners";
+"editor.shadow" = "Shadow";
+"editor.quality" = "Quality";
+"editor.scale" = "Scale";
+"editor.width" = "Width";
+"editor.height" = "Height";
+"editor.ratioFree" = "Free";
+"editor.ratioAuto" = "Auto";
+"editor.customColor" = "Custom color";
+"editor.targetSize" = "Max size";
+"editor.targetSizeOff" = "off";
+"editor.targetSizeHint" = "0 means no limit. Otherwise quality is lowered until the file fits below this value.";
+"editor.saveFailed" = "Cannot save";
+"error.sizeLimit" = "That target size cannot be reached at this resolution. Please reduce the scale or allow a larger limit.";
+
+/* Hover explanations */
+"help.tools" = "Shows Crop, Add BG and Compress in the wheel instead of the output formats.";
+"help.settings" = "Set the key combination and the opacity.";
+"help.chooseFiles" = "Pick files to convert.";
+"help.trySample" = "Creates a sample image so you can try the workflow without your own file.";
+"help.showInFinder" = "Reveals the files created last in Finder.";
+"help.wheel" = "Drop files here, or click a format in the wheel.";
+"help.aspectRatio" = "Locks the crop to a fixed aspect ratio.";
+"help.cropSize" = "Width and height of the crop in pixels. Press Return to apply.";
+"help.presets" = "Ready-made gradient background.";
+"help.solids" = "Solid colour background.";
+"help.chooseBackdrop" = "Use your own image as the background.";
+"help.customColor" = "Pick any colour for the background.";
+"help.padding" = "Space between the image and the edge of the background.";
+"help.corners" = "Rounds the corners of the image.";
+"help.shadow" = "Strength of the drop shadow under the image.";
+"help.ratio" = "Aspect ratio of the finished graphic.";
+"help.quality" = "JPEG quality. Lower quality means a smaller file.";
+"help.scale" = "Shrinks the image before saving.";
+"help.targetSize" = "Desired maximum size in kilobytes. 0 turns the limit off.";
+"help.resetEditor" = "Restores every control in this window.";
+"help.saveEditor" = "Saves the result as a new file next to the original.";
+"help.settingsOpenCombo" = "Hold these keys while dragging a file in Finder.";
+"help.settingsToolsExtra" = "Hold in addition to the keys above to open the image tools.";
+"help.settingsOpacity" = "Opacity of the floating wheel. Further left means more transparent. Windows always stay opaque.";
+"help.settingsReset" = "Restores the factory settings. Takes effect with “Apply”.";
+"help.settingsApply" = "Saves the settings and closes the window.";
+
+"dashboard.dropHint" = "Or drop files into the circle.";
+
+/* Annotating */
+"editor.annotate" = "Edit";
+"editor.textTitle" = "Enter text";
+"editor.textPlaceholder" = "Text";
+"editor.color" = "Colour";
+"editor.deleteElement" = "Delete";
+"editor.pageOf" = "Page %1$d of %2$d";
+"editor.elementsOnPage" = "%d element(s) on this page";
+"editor.redactionWarning" = "Redacted pages become an image. The text on them is permanently removed and no longer searchable.";
+"common.cancel" = "Cancel";
+"tool.select" = "Select";
+"tool.text" = "Text";
+"tool.signature" = "Signature";
+"tool.arrow" = "Arrow";
+"tool.rectangle" = "Rectangle";
+"tool.highlight" = "Highlight";
+"tool.redaction" = "Redact";
+"help.tool.select" = "Click and move existing elements.";
+"help.tool.text" = "Drag a box and type your text.";
+"help.tool.signature" = "Place a signature. The drawing window opens the first time.";
+"help.tool.arrow" = "Drag an arrow, from bottom left to top right.";
+"help.tool.rectangle" = "Draw a box to mark something.";
+"help.tool.highlight" = "Tint a passage; the text underneath stays readable.";
+"help.tool.redaction" = "Permanently obscure a spot. The text is really removed, not just covered.";
+"help.annotationColor" = "Colour for new and selected elements.";
+"help.annotationSize" = "Font size for text elements.";
+"help.deleteElement" = "Remove the selected element. Backspace works too.";
+
+/* Signature */
+"signature.title" = "Signature";
+"signature.drawHint" = "Sign on the line with your mouse or trackpad.";
+"signature.threshold" = "Remove white";
+"signature.clear" = "Clear";
+"signature.import" = "Load photo…";
+"signature.use" = "Use";
+"signature.saved" = "Saved signatures";
+"signature.delete" = "Delete";
+"help.signatureThreshold" = "Further right turns more light pixels transparent.";
+"help.signatureImport" = "Load a photo of a signature on paper. The white background is removed.";
+"help.signatureReuse" = "Click to use this signature. Right-click to delete.";
+
+/* Managing pages */
+"pages.title" = "Pages";
+"pages.rotateLeft" = "Rotate left";
+"pages.rotateRight" = "Rotate right";
+"pages.delete" = "Delete";
+"pages.append" = "Append file…";
+"pages.selectAll" = "Select all";
+"pages.count" = "%d page(s)";
+"help.pagesRotate" = "Turns the selected pages by 90 degrees.";
+"help.pagesDelete" = "Removes the selected pages. At least one page must remain.";
+"help.pagesAppend" = "Appends the pages of another PDF, or an image as a new page.";
+"help.pagesReorder" = "Click to select, hold Shift for several. Drag to change the order.";
+
+/* Introduction */
+"menu.intro" = "Introduction";
+"intro.title" = "Welcome to Flosted";
+"intro.welcome.title" = "Convert and edit files";
+"intro.welcome.body" = "Flosted lives in the menu bar and helps wherever you are already working — right inside Finder.";
+"intro.welcome.point1" = "Convert images, PDFs and text documents into other formats.";
+"intro.welcome.point2" = "Crop, add backgrounds, compress, add text and signatures.";
+"intro.welcome.point3" = "Everything runs on your Mac. Nothing is uploaded, originals stay untouched.";
+"intro.convert.title" = "How it works";
+"intro.convert.body" = "Drag a file in Finder and hold %@ while you do. This very wheel appears at your pointer.";
+"intro.convert.hint" = "Drag onto the format you want and let go. The new file appears next to the original. Press Escape to cancel.";
+"intro.edit.title" = "Edit and sign";
+"intro.edit.body" = "Hold %@ instead and the wheel shows the tools for a single file.";
+"intro.edit.hint" = "“Edit” adds text, signatures, arrows or redactions. For PDFs, “Pages” reorders the pages.";
+"intro.ready.title" = "Ready";
+"intro.ready.body" = "That is everything you need to get started.";
+"intro.ready.point1" = "You may close this window — Flosted stays active in the menu bar.";
+"intro.ready.point2" = "That is also where the settings and this introduction live.";
+"intro.ready.point3" = "You can change which key opens the wheel in the settings.";
+"intro.loadSample" = "Load a sample and try it";
+"intro.back" = "Back";
+"intro.next" = "Next";
+"intro.finish" = "Done";
+
+"editor.unfinished" = "Unfinished elements are not saved: text boxes without text and frames without a signature.";
+"editor.rotation" = "Rotation";
+"editor.rotationReset" = "Upright";
+"editor.changeText" = "Change text";
+"help.rotation" = "Rotates the selected element. “Upright” puts it back to zero.";
+"help.changeText" = "Change the text of the selected box. Double-clicking it works too.";
+"pages.dropHint" = "Drop images or PDFs here to add pages.";
+
+/* Short labels inside the wheel */
+"wheel.crop" = "Crop";
+"wheel.background" = "Add BG";
+"wheel.compress" = "Compress";
+"wheel.annotate" = "Edit";
+"wheel.pages" = "Pages";
+"editor.widthShort" = "W";
+"editor.heightShort" = "H";
+"editor.zoomFit" = "Fit";
+"editor.zoomFitShort" = "Fit";
+"editor.resetTitle" = "Remove all elements?";
+"editor.resetMessage" = "Everything you inserted will be discarded. Undo can bring it back.";
+"editor.resetConfirm" = "Remove";
+"help.undo" = "Take back the last step (Command-Z).";
+"help.redo" = "Restore the step you took back (Shift-Command-Z).";
+"help.zoom" = "Zoom the view in or out. “Fit” shows the whole page.";
