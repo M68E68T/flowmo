@@ -5,6 +5,9 @@ import FlostedCore
 /// Looks a text up in Bundle.main. SwiftUI resolves plain string *literals*
 /// on its own; this is for AppKit titles and for texts with inserted values,
 /// where interpolating into the literal would corrupt the key.
+/// Translations live only in Resources/*.lproj at the project root, which
+/// build-app.sh copies into the bundle and LocalizationTests reads directly.
+/// Build-tool output uses plain strings instead, so no second copy is needed.
 func tr(_ key: String, _ args: CVarArg...) -> String {
     let format = NSLocalizedString(key, comment: "")
     return args.isEmpty ? format : String(format: format, arguments: args)

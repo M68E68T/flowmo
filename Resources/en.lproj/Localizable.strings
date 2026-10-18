@@ -235,3 +235,5 @@
 "help.undo" = "Take back the last step (Command-Z).";
 "help.redo" = "Restore the step you took back (Shift-Command-Z).";
 "help.zoom" = "Zoom the view in or out. “Fit” shows the whole page.";
+
+/* Build hook --export-iconset (stderr) */

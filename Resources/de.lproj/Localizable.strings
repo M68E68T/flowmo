@@ -235,3 +235,5 @@
 "help.undo" = "Letzten Schritt zurücknehmen (Befehl-Z).";
 "help.redo" = "Zurückgenommenen Schritt wiederherstellen (Umschalt-Befehl-Z).";
 "help.zoom" = "Ansicht vergrößern oder verkleinern. „Einpassen“ zeigt die ganze Seite.";
+
+/* Build-Hook --export-iconset (stderr) */

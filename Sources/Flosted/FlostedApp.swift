@@ -8,8 +8,14 @@ enum FlostedApp {
     @MainActor static func main() {
         // Build-time hook: renders the iconset from the same BrandMark vectors
         // the app draws with, so icon and interface can never drift apart.
-        if let index = CommandLine.arguments.firstIndex(of: "--export-iconset"),
-           index + 1 < CommandLine.arguments.count {
+        // Messages here stay plain: this is build output for a developer, and
+        // the bare binary has no Bundle.main to resolve translations from.
+        if CommandLine.arguments.contains("--export-iconset") {
+            guard let index = CommandLine.arguments.firstIndex(of: "--export-iconset"),
+                  index + 1 < CommandLine.arguments.count else {
+                FileHandle.standardError.write(Data("--export-iconset braucht einen Zielordner.\n".utf8))
+                exit(1)
+            }
             exportIconset(to: URL(fileURLWithPath: CommandLine.arguments[index + 1]))
             return
         }
@@ -40,7 +46,8 @@ enum FlostedApp {
             }
             print("iconset: \(folder.path)")
         } catch {
-            FileHandle.standardError.write(Data("Icon-Export fehlgeschlagen: \(error.localizedDescription)\n".utf8))
+            FileHandle.standardError.write(
+                Data("Icon-Export fehlgeschlagen: \(error.localizedDescription)\n".utf8))
             exit(1)
         }
     }
