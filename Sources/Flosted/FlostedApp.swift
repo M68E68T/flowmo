@@ -6,11 +6,43 @@ import FlostedCore
 @main
 enum FlostedApp {
     @MainActor static func main() {
+        // Build-time hook: renders the iconset from the same BrandMark vectors
+        // the app draws with, so icon and interface can never drift apart.
+        if let index = CommandLine.arguments.firstIndex(of: "--export-iconset"),
+           index + 1 < CommandLine.arguments.count {
+            exportIconset(to: URL(fileURLWithPath: CommandLine.arguments[index + 1]))
+            return
+        }
         let app = NSApplication.shared
         let controller = AppController()
         app.delegate = controller
         app.setActivationPolicy(.regular)
         withExtendedLifetime(controller) { app.run() }
+    }
+
+    /// The ten sizes `iconutil` expects, written as PNGs.
+    @MainActor private static func exportIconset(to folder: URL) {
+        let sizes = [16, 32, 128, 256, 512]
+        do {
+            try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+            for size in sizes {
+                for scale in [1, 2] {
+                    let pixels = size * scale
+                    let suffix = scale == 1 ? "" : "@2x"
+                    let image = BrandMark.image(side: CGFloat(pixels), style: .appIcon)
+                    guard let tiff = image.tiffRepresentation,
+                          let bitmap = NSBitmapImageRep(data: tiff),
+                          let png = bitmap.representation(using: .png, properties: [:]) else {
+                        throw CocoaError(.fileWriteUnknown)
+                    }
+                    try png.write(to: folder.appendingPathComponent("icon_\(size)x\(size)\(suffix).png"))
+                }
+            }
+            print("iconset: \(folder.path)")
+        } catch {
+            FileHandle.standardError.write(Data("Icon-Export fehlgeschlagen: \(error.localizedDescription)\n".utf8))
+            exit(1)
+        }
     }
 }
 

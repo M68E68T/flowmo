@@ -103,6 +103,11 @@ Do not introduce dark dashboards, oversized headings or side-by-side editor layo
   reopen it within the same drag. Do not reintroduce a sticky suppress flag.
 - Escape/cancel must not create files. Only the native drop handler starts conversion.
 - Do not publish GitHub releases or change system settings without user instruction.
+- The git repository is local only: no remote, no push, no GitHub release unless
+  the user explicitly asks. Commit freely, publish never.
+- Icon and interface share the BrandMark vectors. Regenerate the committed
+  Resources/Flosted.icns with scripts/make-icon.sh after changing BrandMark;
+  never hand-draw a second version of the mark.
 
 ## Validation
 Build: bash scripts/build-app.sh

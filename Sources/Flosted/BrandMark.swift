@@ -22,6 +22,8 @@ enum BrandMark {
         context.saveGState()
         defer { context.restoreGState() }
         let side = min(rect.width, rect.height)
+        // Quartz shadows ignore the drawing transform; scale them explicitly.
+        let shadowScale = side / 1024
         context.translateBy(x: rect.midX - side / 2, y: rect.midY - side / 2)
         context.scaleBy(x: side / 1024, y: side / 1024)
         context.setAllowsAntialiasing(true)
@@ -30,7 +32,7 @@ enum BrandMark {
             let tile = CGPath(roundedRect: CGRect(x: 64, y: 64, width: 896, height: 896),
                               cornerWidth: 200, cornerHeight: 200, transform: nil)
             context.saveGState()
-            context.setShadow(offset: CGSize(width: 0, height: -12), blur: 22,
+            context.setShadow(offset: CGSize(width: 0, height: -12 * shadowScale), blur: 22 * shadowScale,
                               color: color(0.15, 0.17, 0.20, 0.20))
             context.addPath(tile)
             context.setFillColor(color(0.94, 0.94, 0.94))
@@ -61,7 +63,7 @@ enum BrandMark {
             }
 
             context.saveGState()
-            context.setShadow(offset: CGSize(width: 0, height: -8), blur: 14,
+            context.setShadow(offset: CGSize(width: 0, height: -8 * shadowScale), blur: 14 * shadowScale,
                               color: color(0.22, 0.18, 0.14, 0.23))
             context.addPath(path)
             context.setFillColor(index == 0 ? accent.cgColor : color(0.83, 0.82, 0.80))

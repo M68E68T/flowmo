@@ -48,12 +48,22 @@ Kein dunkles Dashboard und keine seitliche Editorleiste.
 Fensterfarbe hängt von dem Desktop hinter der Glasfläche ab.
 
 ## Nächste Schritte
-1. Werkzeug-Kombination (ab Werk ⌥⇧) → Zuschnitt/Hintergrund starten und echte
-   Ausgabedateien prüfen.
-2. Ausrichtung und Glasdarstellung mit der tatsächlichen Videovorlage vergleichen.
-3. Escape, Verlassen des Menüs, mehrere Bildschirme und Mehrfachauswahl praktisch prüfen.
-4. Unterstützte Formate bei Bedarf erweitern. WebP/AVIF sind noch nicht enthalten.
-5. Vor Weitergabe eigenes Branding/Lizenz, Developer ID, Notarisierung und GitHub Release.
+
+**Gebaut, aber noch nicht im Alltag bestätigt** — die Abnahmeschritte stehen in
+docs/VALIDATION.md:
+1. Bildwerkzeuge und Annotations-Editor mit echten Dateien durchspielen.
+2. Escape, Verlassen des Menüs, mehrere Bildschirme und Mehrfachauswahl prüfen.
+3. HEIC-Kodierung und Texterkennung auf echten Scans prüfen.
+
+**Noch offen:**
+4. WebP/AVIF als Ausgabeformate; Metadaten (Aufnahmedatum, Ort) gehen beim
+   Umwandeln derzeit verloren.
+5. Developer ID und Notarisierung, damit die App sich bei Empfängern ohne
+   Rechtsklick-Umweg öffnet. Kostet 99 $/Jahr und braucht Muhammets Apple-ID.
+6. Veröffentlichung auf GitHub. Das Repository liegt bislang nur lokal; ein
+   Push erfolgt ausschließlich auf ausdrückliche Anweisung.
+
+
 
 Die App ist keine vollständige Kopie sämtlicher Tangerine-Funktionen. Es gibt
 keine verlustfreie PDF→DOCX-Layoutrekonstruktion und keine Audio-/Videokonvertierung.

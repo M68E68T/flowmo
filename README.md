@@ -3,6 +3,13 @@
 Native Mac-App mit schwebendem Kreis-Menü für lokale Dateikonvertierung.
 Eigenständige Implementierung nach der bereitgestellten Tangerine-Videovorlage.
 
+Das eigene Logo zeigt vier abgerundete Ringsegmente, eines davon orange.
+App-Icon und Willkommenszeichen haben eine helle Milchglasoptik; die Menüleiste
+verwendet eine einfarbige, an helle und dunkle Hintergründe angepasste Variante.
+Alle Varianten entstehen aus derselben skalierbaren Zeichenquelle. Der App-Build
+erzeugt die macOS-Icondatei automatisch; generierte Grafiken bleiben in `.build`
+und `dist`.
+
 ## Oberfläche nach der Videovorlage
 
 - Schwebender Glasring mit abgerundeten Kreissegmenten, schmalem Außenrand,
@@ -175,9 +182,47 @@ Voraussetzung zum Bauen: Xcode oder passende Apple Command Line Tools, Swift 5.9
 Die App nutzt öffentliche AppKit-APIs, keine Bildschirmaufnahme und keinen
 Tastatur-Hook. Es werden keine Dateien hochgeladen oder Telemetriedaten gesendet.
 
-## Weitergabe
+## An Freunde weitergeben
 
-Die lokale App ist ad hoc signiert, noch nicht mit einer Developer ID signiert
-oder von Apple notarisiert. Für komfortable Downloads anderer Nutzer sind diese
-Schritte sowie Tests auf deren Macs noch erforderlich. Es wurde nichts auf GitHub
-veröffentlicht. Eine Windows-Version ist nicht enthalten.
+Paket erstellen:
+
+```bash
+bash scripts/package.sh
+```
+
+Das erzeugt `dist/Flosted-0.4.0.zip`. Verpackt wird mit `ditto`, nicht mit
+`zip` — ein gewöhnliches `zip` zerstört die Bundle-Struktur und die Signatur.
+
+### Was beim Empfänger passiert
+
+Die App ist **ad hoc signiert**, also nicht mit einer Developer ID von Apple.
+Ein Doppelklick schlägt deshalb fehl mit einer Meldung wie „Flosted kann nicht
+geöffnet werden, da Apple sie nicht auf Schadsoftware überprüfen konnte."
+
+Der funktionierende Weg, einmal pro Rechner:
+
+1. **Rechtsklick** auf Flosted.app → **„Öffnen"**
+2. Im Dialog nochmals **„Öffnen"** klicken
+
+Falls das bei neueren macOS-Versionen nicht genügt:
+**Systemeinstellungen → Datenschutz & Sicherheit** → dort erscheint nach dem
+Versuch ein Knopf **„Dennoch öffnen"**.
+
+### Ehrlich dazu
+
+Das ist für Laien eine Zumutung — die Warnung klingt nach Schadsoftware, und
+genau das soll sie ja auch, wenn man die Herkunft nicht kennt. Weg geht sie
+nur so:
+
+| Schritt | Aufwand |
+| --- | --- |
+| Apple Developer Program | 99 $ pro Jahr |
+| Mit **Developer ID** signieren statt ad hoc | einmalig einrichten |
+| Von Apple **notarisieren** lassen (`notarytool`) | pro Version ein paar Minuten |
+| Ticket ans Bundle heften (`stapler`) | ein Befehl |
+
+Danach öffnet die App sich beim Empfänger mit einem normalen Doppelklick. Für
+den Kreis von Freunden ist der Rechtsklick-Weg meist die pragmatischere Wahl.
+
+Es wurde nichts auf GitHub veröffentlicht; das Repository liegt nur lokal.
+Eine Windows-Version ist nicht enthalten.

@@ -16,6 +16,7 @@ APP_PATH="$PROJECT_ROOT/dist/Flosted.app"
 mkdir -p "$APP_PATH/Contents/MacOS" "$APP_PATH/Contents/Resources"
 cp "$PROJECT_ROOT/.build/release/Flosted" "$APP_PATH/Contents/MacOS/Flosted"
 cp "$PROJECT_ROOT/Resources/Info.plist" "$APP_PATH/Contents/Info.plist"
+cp "$PROJECT_ROOT/Resources/Flosted.icns" "$APP_PATH/Contents/Resources/Flosted.icns"
 # Render the shared vector artwork at every standard macOS icon resolution.
 # The generator, PNGs and ICNS are build artifacts, never source assets.
 ICON_BUILD="$PROJECT_ROOT/.build/branding"

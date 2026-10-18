@@ -245,3 +245,23 @@ Dateizugriffsgrenzen blieben aktiv. Das lokale Bundle ist nur ad hoc signiert.
   „Seitenverhältnis“ ohne Wortumbruch und die ergänzten Editorbedienelemente
   einschließlich „Einpassen“ mit aufgelösten Hilfetexten. Testinstanzen beendet;
   die laufende Nutzerinstanz wurde nicht neu gestartet.
+
+## Eigenes Logo vom 19.10.2026
+
+- Gemeinsame AppKit-Zeichenquelle für App-Icon, Willkommenszeichen und
+  einfarbiges Template-Menüleistensymbol; kein interaktives Rad als Dekoration.
+- Release-Build erfolgreich; alle 54 bestehenden Tests bestehen auch nach
+  der abschließenden Korrektur der Schatten-Skalierung.
+- Zehn PNG-Repräsentationen von 16 bis 1024 Pixeln mit korrekten Abmessungen
+  erzeugt und als `Flosted.icns` im Bundle hinterlegt. `CFBundleIconFile`
+  verweist darauf; die finale Ad-hoc-Signatur besteht die strenge Prüfung.
+- App-Icon im Finder visuell bestätigt. Größenvergleich für 128, 64, 32 und
+  16 Pixel sowie Willkommenszeichen und 18-/36-Pixel-Template auf hellen und
+  dunklen Testflächen kontrolliert. Template-Eigenschaft zusätzlich geprüft.
+- Willkommenskarte in einem separat signierten Preview-only-Bundle geprüft.
+  Quartz skaliert Schatten nicht mit der Zeichenmatrix: Schattenabstand und
+  Unschärfe werden deshalb ausdrücklich auf die Ausgabegröße umgerechnet.
+- JPG-Konvertierung einer frisch erzeugten Beispieldatei über das vorhandene
+  Dashboard-Rad erfolgreich; Ergebnis im Finder vorhanden. Ein erneuter echter
+  Finder-Drag mit währenddessen gedrückter Auslösetaste sowie eine Sichtprüfung
+  im Dock und in der tatsächlichen Menüleiste sind hier nicht separat erfolgt.
