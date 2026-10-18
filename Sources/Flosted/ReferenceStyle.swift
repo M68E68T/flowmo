@@ -95,9 +95,13 @@ struct ReferenceActionButton: ButtonStyle {
 }
 
 final class ReferenceWindow: NSWindow {
+    let dimensions: WindowDimensions
+    var editorCommands: EditorWindowCommands?
+    private var resizeObserver: NSObjectProtocol?
     override var canBecomeKey: Bool { true }
     override var canBecomeMain: Bool { true }
     init(size: CGSize, title: String, resizable: Bool = false) {
+        dimensions = WindowDimensions(size)
         var mask: NSWindow.StyleMask = [.borderless]
         if resizable { mask.insert(.resizable) }
         super.init(contentRect: CGRect(origin: .zero, size: size), styleMask: mask, backing: .buffered, defer: false)
@@ -105,6 +109,42 @@ final class ReferenceWindow: NSWindow {
         isOpaque = false; backgroundColor = .clear; hasShadow = true
         isMovableByWindowBackground = true; isReleasedWhenClosed = false
         appearance = NSAppearance(named: .aqua)
+        resizeObserver = NotificationCenter.default.addObserver(forName: NSWindow.didResizeNotification,
+            object: self, queue: .main) { [weak self] _ in
+                MainActor.assumeIsolated {
+                    guard let self, let size = self.contentView?.bounds.size, size != self.dimensions.size else { return }
+                    self.dimensions.size = size
+                }
+            }
+    }
+    deinit { if let resizeObserver { NotificationCenter.default.removeObserver(resizeObserver) } }
+
+    @objc func undo(_ sender: Any?) { if editorCommands?.canUndo() == true { editorCommands?.undo() } }
+    @objc func redo(_ sender: Any?) { if editorCommands?.canRedo() == true { editorCommands?.redo() } }
+    override func validateUserInterfaceItem(_ item: NSValidatedUserInterfaceItem) -> Bool {
+        if item.action == #selector(undo(_:)) { return editorCommands?.canUndo() ?? false }
+        if item.action == #selector(redo(_:)) { return editorCommands?.canRedo() ?? false }
+        return super.validateUserInterfaceItem(item)
+    }
+    override func performKeyEquivalent(with event: NSEvent) -> Bool {
+        // Borderless hosting windows can consume SwiftUI key equivalents
+        // before the Edit menu. Route editor commands here; leave text editing
+        // and attached sheets to the native responder chain.
+        if attachedSheet == nil, !(firstResponder is NSTextView), let commands = editorCommands,
+           event.modifierFlags.intersection(.deviceIndependentFlagsMask).contains(.command) {
+            switch event.charactersIgnoringModifiers {
+            case "z", "Z":
+                if event.modifierFlags.contains(.shift) {
+                    if commands.canRedo() { commands.redo() }
+                } else if commands.canUndo() { commands.undo() }
+                return true
+            case "0": commands.fit(); return true
+            case "+", "=": commands.zoom(1); return true
+            case "-": commands.zoom(-1); return true
+            default: break
+            }
+        }
+        return super.performKeyEquivalent(with: event)
     }
 }
 

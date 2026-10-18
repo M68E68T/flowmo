@@ -46,17 +46,23 @@ public enum AnnotationGeometry {
 
     /// Frame plus diagonal for an arrow running from `start` to `end`.
     /// `flipped` means top-left to bottom-right instead of bottom-left to top-right.
-    public static func arrow(from start: CGPoint, to end: CGPoint) -> (rect: CGRect, flipped: Bool) {
+    public static func arrow(from start: CGPoint, to end: CGPoint) -> (rect: CGRect, flipped: Bool, reversed: Bool) {
         let rect = CGRect(x: min(start.x, end.x), y: min(start.y, end.y),
                           width: abs(end.x - start.x), height: abs(end.y - start.y))
         // Flipped when the two points run against the rising diagonal.
         let flipped = (end.x - start.x) * (end.y - start.y) < 0
-        return (rect, flipped)
+        return (rect, flipped, end.x < start.x || (end.x == start.x && end.y < start.y))
     }
 
     /// The two ends of an arrow drawn inside `rect`, honouring the diagonal.
-    public static func arrowPoints(in rect: CGRect, flipped: Bool) -> (start: CGPoint, end: CGPoint) {
-        flipped ? (CGPoint(x: rect.minX, y: rect.maxY), CGPoint(x: rect.maxX, y: rect.minY))
-                : (CGPoint(x: rect.minX, y: rect.minY), CGPoint(x: rect.maxX, y: rect.maxY))
+    public static func arrowPoints(in rect: CGRect, flipped: Bool, reversed: Bool = false) -> (start: CGPoint, end: CGPoint) {
+        let ends = arrowHandles(flipped: flipped, reversed: reversed)
+        return (ends[0].point(in: rect), ends[1].point(in: rect))
+    }
+
+    /// Ordered start and tip, also used for drawing and grabbing the handles.
+    public static func arrowHandles(flipped: Bool, reversed: Bool = false) -> [ResizeHandle] {
+        let ends: [ResizeHandle] = flipped ? [.topLeft, .bottomRight] : [.bottomLeft, .topRight]
+        return reversed ? Array(ends.reversed()) : ends
     }
 }

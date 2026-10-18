@@ -34,10 +34,12 @@ public struct Annotation: Equatable, Sendable, Identifiable {
     /// Which diagonal of the frame an arrow follows. Keeping the model on a
     /// rectangle while still covering all four directions.
     public var arrowFlipped: Bool
+    /// The same diagonal can point in either direction.
+    public var arrowReversed: Bool
 
     public init(id: UUID = UUID(), kind: AnnotationKind, frame: CGRect,
                 style: AnnotationStyle = AnnotationStyle(), page: Int = 0,
-                rotation: Double = 0, arrowFlipped: Bool = false) {
+                rotation: Double = 0, arrowFlipped: Bool = false, arrowReversed: Bool = false) {
         self.id = id
         self.kind = kind
         self.frame = frame
@@ -45,6 +47,7 @@ public struct Annotation: Equatable, Sendable, Identifiable {
         self.page = max(0, page)
         self.rotation = rotation
         self.arrowFlipped = arrowFlipped
+        self.arrowReversed = arrowReversed
     }
 
     /// Maps the normalized frame onto a concrete canvas, flipping nothing:

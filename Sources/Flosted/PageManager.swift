@@ -23,6 +23,12 @@ struct PageManager: View {
     @State private var thumbs: [PageThumb] = []
     @State private var selection: Set<ObjectIdentifier> = []
     @State private var dragging: ObjectIdentifier?
+    @State private var hovered: ObjectIdentifier?
+    @State private var beforeDrag: [PageThumb]?
+    @State private var importing = false
+    @State private var importTask: Task<Void, Never>?
+    @State private var previewGeneration = UUID()
+    @State private var isOpen = true
     @State private var importTargeted = false
     @State private var saving = false
     @State private var errorMessage: String?
@@ -38,8 +44,8 @@ struct PageManager: View {
     var body: some View {
         ReferenceSurface {
             VStack(spacing: 0) {
-                ReferenceHeader(title: tr("pages.title"), close: cancel)
-                toolbar
+                ReferenceHeader(title: tr("pages.title"), close: cancel).disabled(saving)
+                toolbar.disabled(saving || importing)
                 ScrollView {
                     LazyVGrid(columns: columns, spacing: 14) {
                         ForEach(thumbs) { thumb in thumbnail(thumb) }
@@ -50,6 +56,7 @@ struct PageManager: View {
                 .overlay(RoundedRectangle(cornerRadius: 9)
                     .strokeBorder(importTargeted ? accent : .clear, lineWidth: 2))
                 .onDrop(of: [.fileURL], isTargeted: $importTargeted) { providers in
+                    guard !saving, !importing else { return false }
                     receive(providers, nil)   // free area: append
                     return true
                 }
@@ -60,7 +67,11 @@ struct PageManager: View {
             }
         }
         .frame(width: PageManagerLayout.size.width, height: PageManagerLayout.size.height)
-        .task { await reload() }
+        .task { isOpen = true; await reload() }
+        .onDisappear {
+            isOpen = false; importTask?.cancel(); previewGeneration = UUID()
+            dragging = nil; hovered = nil; beforeDrag = nil
+        }
         .alert(Text("editor.saveFailed"), isPresented: Binding(get: { errorMessage != nil }, set: { if !$0 { errorMessage = nil } })) {
             Button("common.ok") { errorMessage = nil }
         } message: { Text(errorMessage ?? "") }
@@ -100,17 +111,21 @@ struct PageManager: View {
                 .foregroundStyle(isSelected ? accent : .secondary)
         }
         .contentShape(Rectangle())
-        .onTapGesture {
-            // Shift-click extends, a plain click replaces the selection.
-            if NSEvent.modifierFlags.contains(.shift) || NSEvent.modifierFlags.contains(.command) {
-                if isSelected { selection.remove(thumb.id) } else { selection.insert(thumb.id) }
-            } else { selection = [thumb.id] }
-        }
-        .onDrag { dragging = thumb.id; return NSItemProvider(object: NSString(string: thumb.id.debugDescription)) }
+        .overlay(PageDragSource(image: thumb.preview, label: tr("pages.page", (index ?? 0) + 1),
+                                token: thumb.id.debugDescription, selected: isSelected,
+            clicked: { flags in
+                if flags.contains(.shift) || flags.contains(.command) {
+                    if selection.contains(thumb.id) { selection.remove(thumb.id) } else { selection.insert(thumb.id) }
+                } else { selection = [thumb.id] }
+            }, began: { beforeDrag = thumbs; dragging = thumb.id }, ended: { accepted in
+                if !accepted, let original = beforeDrag { thumbs = original }
+                dragging = nil; hovered = nil; beforeDrag = nil
+            }))
+        .allowsHitTesting(!saving && !importing)
         // One delegate for both: SwiftUI allows only a single drop modifier
         // per view, and reordering plus importing share this target.
         .onDrop(of: [.text, .fileURL],
-                delegate: ThumbDropDelegate(target: thumb.id, dragging: $dragging,
+                delegate: ThumbDropDelegate(target: thumb.id, dragging: $dragging, hovered: $hovered,
                                             thumbs: $thumbs, receive: receive))
         .help(Text("help.pagesReorder"))
     }
@@ -119,11 +134,11 @@ struct PageManager: View {
         HStack {
             Button("pages.selectAll") { selection = Set(thumbs.map(\.id)) }.buttonStyle(ReferenceActionButton())
             Spacer()
-            if saving { ProgressView().controlSize(.small) }
+            if saving || importing { ProgressView().controlSize(.small) }
             Button("editor.save", action: save).buttonStyle(ReferenceActionButton(primary: true))
                 .keyboardShortcut(.defaultAction).help(Text("help.saveEditor"))
         }
-        .padding(13).disabled(saving)
+        .padding(13).disabled(saving || importing)
         .overlay(alignment: .top) { Rectangle().fill(.black.opacity(0.075)).frame(height: 0.6) }
     }
 
@@ -135,8 +150,18 @@ struct PageManager: View {
     /// this stays on the main actor instead of shipping pages across threads.
     private func refreshPreviews() {
         let size = CGSize(width: 104, height: 132)
-        for index in thumbs.indices {
-            thumbs[index].preview = thumbs[index].page.thumbnail(of: size, for: .mediaBox)
+        let generation = UUID(); previewGeneration = generation
+        let ids = thumbs.map(\.id)
+        Task { @MainActor in
+            for id in ids {
+                guard isOpen, previewGeneration == generation else { return }
+                if let index = thumbs.firstIndex(where: { $0.id == id }) {
+                    thumbs[index].preview = thumbs[index].page.thumbnail(of: size, for: .mediaBox)
+                }
+                // PDFKit stays on the main actor, but a large document must not
+                // monopolize it for every thumbnail in one synchronous loop.
+                await Task.yield()
+            }
         }
     }
     private func rotate(_ degrees: Int) {
@@ -160,39 +185,47 @@ struct PageManager: View {
     /// Resolves the dropped providers, then hands the urls to `insert`.
     private func receive(_ providers: [NSItemProvider], _ index: Int?) {
         let group = DispatchGroup()
-        var urls: [URL] = []
+        var urls: [Int: URL] = [:]
         let lock = NSLock()
-        for provider in providers {
+        for (index, provider) in providers.enumerated() {
             group.enter()
             _ = provider.loadObject(ofClass: URL.self) { url, _ in
-                if let url { lock.lock(); urls.append(url); lock.unlock() }
+                if let url { lock.lock(); urls[index] = url; lock.unlock() }
                 group.leave()
             }
         }
-        group.notify(queue: .main) { insert(urls, at: index) }
+        group.notify(queue: .main) { if isOpen { insert(urls.keys.sorted().compactMap { urls[$0] }, at: index) } }
     }
 
     /// Unreadable files are collected rather than aborting the whole drop:
     /// one odd file must not cost the user the rest of the selection.
     private func insert(_ urls: [URL], at index: Int?) {
-        guard !urls.isEmpty else { return }
-        var added: [PageThumb] = []
-        var failed: [String] = []
-        for url in urls {
-            do { added.append(contentsOf: try PageOperations.pages(from: url).map(PageThumb.init)) }
-            catch { failed.append("\(url.lastPathComponent): \(error.localizedDescription)") }
+        guard isOpen, !urls.isEmpty, !saving, !importing else { return }
+        importing = true
+        importTask = Task { @MainActor in
+            let report = await Task.detached(priority: .userInitiated) { () -> ([PDFPage], [String]) in
+                var pages: [PDFPage] = [], failed: [String] = []
+                for url in urls {
+                    do { pages.append(contentsOf: try PageOperations.pages(from: url)) }
+                    catch { failed.append("\(url.lastPathComponent): \(error.localizedDescription)") }
+                }
+                return (pages, failed)
+            }.value
+            guard !Task.isCancelled, isOpen else { return }
+            let added = report.0.map(PageThumb.init)
+            if !added.isEmpty {
+                let at = min(max(index ?? thumbs.count, 0), thumbs.count)
+                thumbs.insert(contentsOf: added, at: at)
+                selection = Set(added.map(\.id))
+                refreshPreviews()
+            }
+            importing = false
+            if !report.1.isEmpty { errorMessage = report.1.joined(separator: "\n") }
         }
-        if !added.isEmpty {
-            let at = min(max(index ?? thumbs.count, 0), thumbs.count)
-            thumbs.insert(contentsOf: added, at: at)
-            selection = Set(added.map(\.id))
-            refreshPreviews()
-        }
-        if !failed.isEmpty { errorMessage = failed.joined(separator: "\n") }
     }
 
     private func save() {
-        guard !saving, !thumbs.isEmpty else { return }
+        guard !saving, !importing, !thumbs.isEmpty else { return }
         saving = true
         // Rebuild from the thumbnails: they carry the order shown on screen.
         let pages = thumbs.map(\.page), input = file
@@ -219,11 +252,13 @@ struct PageManager: View {
 private struct ThumbDropDelegate: DropDelegate {
     let target: ObjectIdentifier
     @Binding var dragging: ObjectIdentifier?
+    @Binding var hovered: ObjectIdentifier?
     @Binding var thumbs: [PageThumb]
     let receive: ([NSItemProvider], Int?) -> Void
 
     func dropEntered(info: DropInfo) {
-        guard let dragging, dragging != target,
+        hovered = target
+        guard !info.hasItemsConforming(to: [.fileURL]), let dragging, dragging != target,
               let from = thumbs.firstIndex(where: { $0.id == dragging }),
               let to = thumbs.firstIndex(where: { $0.id == target }) else { return }
         withAnimation(.easeInOut(duration: 0.15)) {
@@ -231,15 +266,17 @@ private struct ThumbDropDelegate: DropDelegate {
         }
     }
     func performDrop(info: DropInfo) -> Bool {
+        guard info.hasItemsConforming(to: [.fileURL]) || dragging != nil else { return false }
         if info.hasItemsConforming(to: [.fileURL]) {
             receive(info.itemProviders(for: [.fileURL]), thumbs.firstIndex { $0.id == target })
         }
-        dragging = nil
+        dragging = nil; hovered = nil
         return true
     }
-    // Clean up on every exit, not just on success: a drag released beside a
-    // thumbnail used to leave `dragging` set and reorder on the next move.
-    func dropExited(info: DropInfo) { }
+    // Leaving one thumbnail is not the end of the drag: it may enter the next.
+    // Clear target state here; the native source clears/restores the session on
+    // EVERY end, including Escape and a release outside all thumbnails.
+    func dropExited(info: DropInfo) { if hovered == target { hovered = nil } }
     func dropUpdated(info: DropInfo) -> DropProposal? {
         DropProposal(operation: info.hasItemsConforming(to: [.fileURL]) ? .copy : .move)
     }

@@ -18,6 +18,7 @@ enum AnnotationLayout {
 
 /// sheet(item:) needs an Identifiable, and a bare UUID is not one.
 private struct SignatureRequest: Identifiable { let id: UUID }
+private struct TextRequest: Identifiable { let id: UUID; let value: String }
 
 struct AnnotationEditor: View {
     let file: URL
@@ -33,7 +34,9 @@ struct AnnotationEditor: View {
     @State private var backdrop: CGImage?
     @State private var signatures: [String: CGImage] = [:]
     @State private var editingText: UUID?
-    @State private var textDraft = ""
+    @State private var textRequest: TextRequest?
+    @State private var propertyCommit: Task<Void, Never>?
+    @State private var adjustingRotation = false
     @State private var saving = false
     @State private var errorMessage: String?
     @State private var signatureTarget: SignatureRequest?
@@ -51,10 +54,10 @@ struct AnnotationEditor: View {
     var body: some View {
         ReferenceSurface {
             VStack(spacing: 0) {
-                ReferenceHeader(title: tr("editor.annotate"), close: cancel)
-                toolbar
+                ReferenceHeader(title: tr("editor.annotate"), close: cancel).disabled(saving)
+                toolbar.disabled(saving)
                 if let current = selectedAnnotation { propertyBar(current) }
-                canvasArea
+                canvasArea.allowsHitTesting(!saving)
                 if source.pageCount > 1 { pageStrip }
                 if hasUnfinished {
                     Label(tr("editor.unfinished"), systemImage: "exclamationmark.circle")
@@ -74,9 +77,21 @@ struct AnnotationEditor: View {
         }
         .frame(minWidth: AnnotationLayout.minimum.width, maxWidth: .infinity,
                minHeight: AnnotationLayout.minimum.height, maxHeight: .infinity)
-        .task { await loadPage() }
         .task(id: page) { await loadPage() }
         .onAppear { signatures = store.load() }
+        .onChange(of: selected) { _ in
+            if editingText == nil && signatureTarget == nil,
+               !annotations.contains(where: { !$0.isComplete(signatures: Set(signatures.keys)) }) { commitProperties() }
+            if let annotation = selectedAnnotation { style = annotation.style }
+        }
+        .onChange(of: tool) { _ in commitProperties() }
+        .onChange(of: page) { _ in selected = nil }
+        .onDisappear { propertyCommit?.cancel() }
+        .background(EditorCommandBridge(commands: EditorWindowCommands(
+            canUndo: { !saving && textRequest == nil && signatureTarget == nil && (history.canUndo || history.current != annotations) },
+            canRedo: { !saving && textRequest == nil && signatureTarget == nil && history.canRedo },
+            undo: undo, redo: redo, fit: { zoom = nil }, zoom: step))
+            .frame(width: 0, height: 0).accessibilityHidden(true))
         .sheet(item: $signatureTarget) { target in
             SignatureCapture(store: store, accent: accent) { id in
                 signatures = store.load()
@@ -85,11 +100,14 @@ struct AnnotationEditor: View {
             // Closing without a choice must not leave an invisible element.
             .onDisappear { removeIfUnassigned(target.id) }
         }
-        .alert(Text("editor.textTitle"), isPresented: Binding(get: { editingText != nil }, set: { if !$0 { editingText = nil } })) {
-            TextField("editor.textPlaceholder", text: $textDraft)
-            Button("editor.apply") { commitText() }
-            // textDraft is empty here, so commitText drops the empty element.
-            Button("common.cancel", role: .cancel) { textDraft = ""; commitText() }
+        .sheet(item: $textRequest, onDismiss: cancelText) { request in
+            AnnotationTextEntry(value: request.value, apply: { value in
+                commitText(value)
+                textRequest = nil
+            }, cancel: {
+                cancelText()
+                textRequest = nil
+            })
         }
         .alert(Text("editor.saveFailed"), isPresented: Binding(get: { errorMessage != nil }, set: { if !$0 { errorMessage = nil } })) {
             Button("common.ok") { errorMessage = nil }
@@ -108,10 +126,11 @@ struct AnnotationEditor: View {
             let canvasSize = canvasSize(in: geometry.size)
             ScrollView([.horizontal, .vertical]) {
                 AnnotationCanvas(backdrop: backdrop, annotations: $annotations, selected: $selected,
-                                 signatures: signatures, tool: tool, style: style, page: page,
+                                 signatures: signatures, logicalSize: logicalSize, tool: tool, style: style, page: page,
                                  requestsText: startTextEntry,
                                  requestsSignature: { signatureTarget = SignatureRequest(id: $0) },
-                                 committed: { history.commit($0) })
+                                 began: commitProperties,
+                                 committed: { history.commitIfChanged($0) })
                     .frame(width: canvasSize.width, height: canvasSize.height)
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
                     .padding(8)
@@ -162,44 +181,41 @@ struct AnnotationEditor: View {
     /// Element-specific controls. The toolbar above is already full, and these
     /// only make sense while something is selected.
     private func propertyBar(_ annotation: Annotation) -> some View {
-        HStack(spacing: 10) {
-            ColorPicker("editor.color", selection: Binding(
-                get: { Color(red: style.color.red, green: style.color.green, blue: style.color.blue) },
-                set: { newValue in
-                    let ns = NSColor(newValue).usingColorSpace(.deviceRGB) ?? .orange
-                    style.color = RGB(ns.redComponent, ns.greenComponent, ns.blueComponent)
-                    applyStyleToSelection()
-                }), supportsOpacity: false)
-                .labelsHidden().frame(width: 26).help(Text("help.annotationColor"))
-            if case .text = annotation.kind {
-                Stepper(value: $style.fontSize, in: 6...96, step: 2) {
-                    Text(verbatim: "\(Int(style.fontSize)) pt").font(.system(size: 10)).monospacedDigit()
-                }.controlSize(.mini).onChange(of: style.fontSize) { _ in applyStyleToSelection() }
-                    .help(Text("help.annotationSize"))
-            }
-            Text("editor.rotation").font(.system(size: 10)).fixedSize()
-            Slider(value: Binding(
-                get: { annotation.rotation },
-                set: { newValue in
-                    guard let index = annotations.firstIndex(where: { $0.id == annotation.id }) else { return }
-                    annotations[index].rotation = newValue
-                }), in: -180...180)
-                .controlSize(.mini).tint(accent).frame(maxWidth: 190)
-            Text(verbatim: "\(Int(annotation.rotation))°")
-                .font(.system(size: 10)).monospacedDigit().fixedSize()
-            Button("editor.rotationReset") {
-                guard let index = annotations.firstIndex(where: { $0.id == annotation.id }) else { return }
-                annotations[index].rotation = 0
-            }.buttonStyle(ReferenceActionButton())
-            if case .text = annotation.kind {
-                Button("editor.changeText") { startTextEntry(annotation.id) }
-                    .buttonStyle(ReferenceActionButton()).help(Text("help.changeText"))
-            }
-            Spacer()
-            Button("editor.deleteElement") { deleteSelected() }
-                .buttonStyle(ReferenceActionButton()).help(Text("help.deleteElement"))
-        }
-        .padding(.horizontal, 16).padding(.bottom, 9)
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: 10) {
+                ColorPicker("editor.color", selection: Binding(
+                    get: { Color(red: annotation.style.color.red, green: annotation.style.color.green, blue: annotation.style.color.blue) },
+                    set: { value in
+                        let ns = NSColor(value).usingColorSpace(.deviceRGB) ?? .orange
+                        editSelected(continuous: true) { $0.style.color = RGB(ns.redComponent, ns.greenComponent, ns.blueComponent) }
+                    }), supportsOpacity: false)
+                    .labelsHidden().frame(width: 26).help(Text("help.annotationColor"))
+                if case .text = annotation.kind {
+                    Stepper(value: Binding(get: { annotation.style.fontSize }, set: { value in
+                        editSelected { $0.style.fontSize = value }
+                    }), in: 6...96, step: 2) {
+                        Text(verbatim: "\(Int(annotation.style.fontSize)) pt").font(.system(size: 10)).monospacedDigit()
+                    }.controlSize(.mini).fixedSize().help(Text("help.annotationSize"))
+                }
+                Text("editor.rotation").font(.system(size: 10)).fixedSize()
+                Slider(value: Binding(get: { annotation.rotation }, set: { value in
+                    editSelected(continuous: true) { $0.rotation = value }
+                }), in: -180...180, onEditingChanged: { editing in
+                    adjustingRotation = editing
+                    if editing { propertyCommit?.cancel() } else { commitProperties() }
+                }).controlSize(.mini).tint(accent).frame(width: 150)
+                    .help(Text("help.rotation"))
+                Text(verbatim: "\(Int(annotation.rotation))°").font(.system(size: 10)).monospacedDigit().fixedSize()
+                Button("editor.rotationReset") { editSelected { $0.rotation = 0 } }
+                    .buttonStyle(ReferenceActionButton())
+                if case .text = annotation.kind {
+                    Button("editor.changeText") { commitProperties(); startTextEntry(annotation.id) }
+                        .buttonStyle(ReferenceActionButton()).help(Text("help.changeText"))
+                }
+                Button("editor.deleteElement") { deleteSelected() }
+                    .buttonStyle(ReferenceActionButton()).help(Text("help.deleteElement"))
+            }.padding(.horizontal, 16)
+        }.frame(height: 28).padding(.bottom, 9).disabled(saving)
     }
 
     private var zoomControls: some View {
@@ -233,11 +249,11 @@ struct AnnotationEditor: View {
         HStack(spacing: 8) {
             Button { undo() } label: { Image(systemName: "arrow.uturn.backward") }
                 .buttonStyle(ReferenceActionButton()).disabled(!history.canUndo)
-                .keyboardShortcut("z", modifiers: .command).help(Text("help.undo"))
+                .help(Text("help.undo"))
             Button { redo() } label: { Image(systemName: "arrow.uturn.forward") }
                 .buttonStyle(ReferenceActionButton()).disabled(!history.canRedo)
-                .keyboardShortcut("z", modifiers: [.command, .shift]).help(Text("help.redo"))
-            Button("editor.reset") { confirmReset = true }
+                .help(Text("help.redo"))
+            Button("editor.reset") { commitProperties(); confirmReset = true }
                 .buttonStyle(ReferenceActionButton()).disabled(annotations.isEmpty)
                 .help(Text("help.resetEditor"))
             Spacer()
@@ -252,29 +268,45 @@ struct AnnotationEditor: View {
         .overlay(alignment: .top) { Rectangle().fill(.black.opacity(0.075)).frame(height: 0.6) }
     }
 
+    private var logicalSize: CGSize {
+        switch source {
+        case .image(let image): return CGSize(width: image.width, height: image.height)
+        case .pdf(let document):
+            guard let target = document.page(at: page) else { return .zero }
+            let box = target.bounds(for: .mediaBox)
+            return target.rotation % 180 == 0 ? box.size : CGSize(width: box.height, height: box.width)
+        }
+    }
     private func loadPage() async {
         switch source {
         case .image(let image): backdrop = image
         case .pdf(let document):
             let index = page
-            backdrop = try? await Task.detached(priority: .userInitiated) { () -> CGImage? in
-                guard let target = document.page(at: index) else { return nil }
-                return try FileConverter.render(target, dpi: 110)
-            }.value
+            do {
+                let rendered = try await Task.detached(priority: .userInitiated) { () -> CGImage in
+                    guard let target = document.page(at: index) else { throw ConversionError.unreadable }
+                    return try FileConverter.render(target, dpi: 110)
+                }.value
+                guard !Task.isCancelled, page == index else { return }
+                backdrop = rendered
+            } catch { if !Task.isCancelled { errorMessage = error.localizedDescription } }
         }
     }
     private func startTextEntry(_ id: UUID) {
-        if let found = annotations.first(where: { $0.id == id }), case .text(let value) = found.kind {
-            textDraft = value
-        } else { textDraft = "" }
+        guard let found = annotations.first(where: { $0.id == id }), case .text(let value) = found.kind else { return }
         editingText = id
+        textRequest = TextRequest(id: id, value: value)
     }
-    private func commitText() {
-        guard let id = editingText, let index = annotations.firstIndex(where: { $0.id == id }) else { return }
-        // An empty text would leave an invisible element behind.
-        var next = annotations
-        if textDraft.isEmpty { next.remove(at: index) } else { next[index].kind = .text(textDraft) }
-        apply(next)
+    private func commitText(_ value: String) {
+        guard let id = editingText else { return }
+        apply(AnnotationEdits.text(annotations, id: id, value: value, committed: history.current))
+        if !annotations.contains(where: { $0.id == selected }) { selected = nil }
+        editingText = nil
+    }
+    private func cancelText() {
+        guard let id = editingText else { return }
+        annotations = AnnotationEdits.text(annotations, id: id, value: nil, committed: history.current)
+        if !annotations.contains(where: { $0.id == selected }) { selected = nil }
         editingText = nil
     }
     /// Targeted, and only onto a signature: taking `selected` would turn a
@@ -283,18 +315,36 @@ struct AnnotationEditor: View {
         guard let index = annotations.firstIndex(where: { $0.id == target }),
               case .signature = annotations[index].kind else { return }
         annotations[index].kind = .signature(id: id)
-        history.commit(annotations)
+        history.commitIfChanged(annotations)
     }
     private func removeIfUnassigned(_ target: UUID) {
         guard let index = annotations.firstIndex(where: { $0.id == target }),
               case .signature(let id) = annotations[index].kind, signatures[id] == nil else { return }
         annotations.remove(at: index)
+        if selected == target { selected = nil }
     }
-    private func applyStyleToSelection() {
+    private func editSelected(continuous: Bool = false, _ edit: (inout Annotation) -> Void) {
         guard let selected, let index = annotations.firstIndex(where: { $0.id == selected }) else { return }
-        annotations[index].style = style
+        if !continuous { commitProperties() }
+        edit(&annotations[index])
+        style = annotations[index].style
+        if !continuous { history.commitIfChanged(annotations); return }
+        propertyCommit?.cancel()
+        guard !adjustingRotation else { return }
+        propertyCommit = Task { @MainActor in
+            try? await Task.sleep(nanoseconds: 300_000_000)
+            guard !Task.isCancelled else { return }
+            history.commitIfChanged(annotations)
+        }
+    }
+    private func commitProperties() {
+        propertyCommit?.cancel()
+        // A content frame exists before its dialog opens, but is not an edit yet.
+        guard annotations.allSatisfy({ $0.isComplete(signatures: Set(signatures.keys)) }) else { return }
+        history.commitIfChanged(annotations)
     }
     private func deleteSelected() {
+        commitProperties()
         guard let selected else { return }
         apply(annotations.filter { $0.id != selected })
         self.selected = nil
@@ -302,14 +352,17 @@ struct AnnotationEditor: View {
     /// Single place where a state change is both shown and recorded.
     private func apply(_ next: [Annotation]) {
         annotations = next
-        history.commit(next)
+        propertyCommit?.cancel()
+        history.commitIfChanged(next)
     }
     private func undo() {
+        commitProperties()
         guard let previous = history.undo() else { return }
         annotations = previous
         if let selected, !previous.contains(where: { $0.id == selected }) { self.selected = nil }
     }
     private func redo() {
+        commitProperties()
         guard let next = history.redo() else { return }
         annotations = next
         if let selected, !next.contains(where: { $0.id == selected }) { self.selected = nil }
@@ -322,7 +375,8 @@ struct AnnotationEditor: View {
     }
 
     private func save() {
-        guard !saving else { return }
+        guard !saving, !complete.isEmpty else { return }
+        commitProperties()
         saving = true
         // Only what is actually drawable; the rest would silently do nothing.
         let list = complete, images = signatures, input = file, origin = source
@@ -346,5 +400,33 @@ struct AnnotationEditor: View {
                 errorMessage = error.localizedDescription
             }
         }
+    }
+}
+
+/// Owns one draft per presentation. Native alert text fields can reset their
+/// binding while dismissing, so an existing annotation must not share it.
+private struct AnnotationTextEntry: View {
+    @State private var draft: String
+    @FocusState private var focused: Bool
+    let apply: (String) -> Void
+    let cancel: () -> Void
+
+    init(value: String, apply: @escaping (String) -> Void, cancel: @escaping () -> Void) {
+        _draft = State(initialValue: value)
+        self.apply = apply
+        self.cancel = cancel
+    }
+    var body: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            Text("editor.textTitle").font(.headline)
+            TextField("editor.textPlaceholder", text: $draft)
+                .textFieldStyle(.roundedBorder).focused($focused)
+            HStack {
+                Spacer()
+                Button("common.cancel", action: cancel).keyboardShortcut(.cancelAction)
+                Button("editor.apply") { apply(draft) }.keyboardShortcut(.defaultAction)
+            }
+        }.padding(24).frame(width: 380, height: 160)
+        .onAppear { focused = true }
     }
 }

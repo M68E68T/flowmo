@@ -10,10 +10,6 @@ struct IntroView: View {
     private let accent = ReferenceStyle.accent
     private let cardCount = 4
 
-    /// FileKind.detect only reads the path extension and never touches disk,
-    /// so a made-up path is enough to show the real wheel with real formats.
-    private let sampleImage = URL(fileURLWithPath: "/beispiel.png")
-
     private var openKeys: String { controller.preferences.openCombo.symbols }
     private var toolKeys: String {
         let combined = controller.preferences.openCombo.union(controller.preferences.toolsExtra)
@@ -54,8 +50,7 @@ struct IntroView: View {
     }
     /// Non-interactive: the wheel is here to be recognised later, not used now.
     private func wheel(tools: Bool) -> some View {
-        EmbeddedWheel(urls: [sampleImage], tools: tools, action: { _, _ in }, receive: { _ in })
-            .frame(width: 250, height: 250).allowsHitTesting(false)
+        WheelIllustration(tools: tools).frame(width: 250, height: 250)
     }
     private func step(_ number: Int, _ text: String) -> some View {
         HStack(alignment: .top, spacing: 9) {

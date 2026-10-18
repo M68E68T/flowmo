@@ -3,12 +3,13 @@ import SwiftUI
 import FlostedCore
 
 final class RadialMenuView: NSView {
-    var actions: [FileAction] = [] { didSet { selected = nil; painter.needsDisplay = true; updateAccessibility() } }
+    var actions: [FileAction] = [] { didSet { selected = nil; glass.isHidden = actions.isEmpty; painter.needsDisplay = true; updateAccessibility() } }
     var urls: [URL] = []
     var onAction: ((FileAction, [URL]) -> Void)?
     var onExit: (() -> Void)?
     var onDragEntered: (([URL]) -> Void)?
     var selected: Int? { didSet { if oldValue != selected { painter.needsDisplay = true } } }
+    let isInteractive: Bool
     var isFloating = true
     var center: CGPoint { CGPoint(x: bounds.midX, y: bounds.midY) }
     var radius: CGFloat { min(bounds.width, bounds.height) / 2 - 13 }
@@ -17,8 +18,11 @@ final class RadialMenuView: NSView {
     private var tracking: NSTrackingArea?
     override var acceptsFirstResponder: Bool { true }
 
-    override init(frame: NSRect) {
+    override convenience init(frame: NSRect) { self.init(frame: frame, interactive: true) }
+    init(frame: NSRect, interactive: Bool) {
+        isInteractive = interactive
         super.init(frame: frame)
+        glass.isHidden = actions.isEmpty
         glass.material = .popover
         glass.blendingMode = .behindWindow
         glass.state = .active
@@ -29,7 +33,7 @@ final class RadialMenuView: NSView {
         painter.wantsLayer = true
         painter.setAccessibilityElement(false)
         addSubview(painter, positioned: .above, relativeTo: glass)
-        registerForDraggedTypes([.fileURL])
+        if interactive { registerForDraggedTypes([.fileURL]) }
         setAccessibilityElement(true)
         setAccessibilityRole(.group)
         setAccessibilityIdentifier("flosted.radial-menu")
@@ -46,8 +50,14 @@ final class RadialMenuView: NSView {
         }
         updateAccessibility()
     }
-    override func hitTest(_ point: NSPoint) -> NSView? { bounds.contains(convert(point,from:superview)) ? self : nil }
+    override func hitTest(_ point: NSPoint) -> NSView? { isInteractive && bounds.contains(convert(point,from:superview)) ? self : nil }
     private func updateAccessibility() {
+        guard isInteractive else {
+            setAccessibilityRole(.image)
+            setAccessibilityLabel(tr("intro.wheelIllustration"))
+            setAccessibilityChildren([])
+            return
+        }
         let elements: [NSAccessibilityElement] = actions.enumerated().map { index, action in
             let angle = (90 - Double(index) * 360 / Double(actions.count)) * .pi / 180
             let r = (radius + 60) / 2
@@ -66,6 +76,7 @@ final class RadialMenuView: NSView {
     override func updateTrackingAreas() {
         super.updateTrackingAreas()
         if let tracking { removeTrackingArea(tracking) }
+        guard isInteractive else { tracking = nil; return }
         tracking = NSTrackingArea(rect: bounds, options: [.mouseMoved, .mouseEnteredAndExited, .activeAlways], owner: self)
         addTrackingArea(tracking!)
     }
@@ -75,6 +86,7 @@ final class RadialMenuView: NSView {
     override func mouseMoved(with event: NSEvent) { updateSelection(convert(event.locationInWindow, from: nil)) }
     override func mouseExited(with event: NSEvent) { selected = nil }
     override func mouseDown(with event: NSEvent) {
+        guard isInteractive else { return }
         updateSelection(convert(event.locationInWindow, from: nil))
         if let selected { onAction?(actions[selected], urls) }
     }
@@ -198,5 +210,16 @@ struct EmbeddedWheel: NSViewRepresentable {
         let options = ActionCatalog.actions(for: urls, tools: tools)
         if view.actions != options { view.actions = options }
         view.urls = urls; view.onAction = action; view.onDragEntered = receive
+    }
+}
+
+/// Shares the wheel painter, but installs no tracking, drop types or actions.
+struct WheelIllustration: NSViewRepresentable {
+    let tools: Bool
+    func makeNSView(context: Context) -> RadialMenuView { RadialMenuView(frame: .zero, interactive: false) }
+    func updateNSView(_ view: RadialMenuView, context: Context) {
+        let sample = URL(fileURLWithPath: "/example.png")
+        view.actions = ActionCatalog.actions(for: [sample], tools: tools)
+        view.urls = [sample]
     }
 }

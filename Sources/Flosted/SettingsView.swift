@@ -23,7 +23,7 @@ struct SettingsView: View {
                 VStack(alignment: .leading, spacing: 16) {
                     section("settings.openCombo", combo: $draft.openCombo, hint: "settings.openComboHint")
                         .help(Text("help.settingsOpenCombo"))
-                    section("settings.toolsExtra", combo: $draft.toolsExtra, hint: "settings.toolsExtraHint")
+                    section("settings.toolsExtra", combo: $draft.toolsExtra, hint: draft.toolsExtra.isEmpty ? "settings.toolsDisabledHint" : "settings.toolsExtraHint")
                         .help(Text("help.settingsToolsExtra"))
                     // Fixed height so the layout never jumps while toggling keys.
                     VStack(alignment: .leading, spacing: 5) {

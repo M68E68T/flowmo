@@ -4,7 +4,7 @@ Datum: 18.10.2026. Apple-Silicon-Mac, Swift 6.3.2, Sprachmodus Swift 5.
 
 ## Automatisch erfolgreich
 - Release-Build inklusive startbarem .app-Bundle, keine Compiler-Warnungen.
-- Sechsundfünfzig XCTest-Fälle, null Fehler.
+- Siebzig XCTest-Fälle, null Fehler (Stand 19.10.2026, siehe unten).
 - PNG/JPG/TIFF-Ausgaben werden erneut als Bilder gelesen, mit korrekten Abmessungen.
 - Originalbytes unverändert; Namenskollisionen erzeugen getrennte neue Dateien.
 - Ungültiger Bildeingang erzeugt keine Ausgabe.
@@ -292,3 +292,16 @@ Dateizugriffsgrenzen blieben aktiv. Das lokale Bundle ist nur ad hoc signiert.
   gelieferte Bild zeigt das orange-weiße Logo. Die direkte Sichtprüfung im Dock
   und App-Umschalter bleibt offen: Der Fernsteuerungszugriff auf das Dock lief
   in ein Timeout. Es wurden keine Dock-Einstellungen oder System-Caches verändert.
+
+## Behebung der UI-/UX-Befunde vom 19.10.2026
+
+- Alle 13 Befunde aus `docs/UI_UX_AUDIT.md` sind im Code behoben; Einzelheiten
+  stehen dort im Abschnitt „Behebungsstand“.
+- Release-Build mit Sprach-Lint und Signatur erfolgreich, ohne Compiler-Warnung.
+- 70 Tests, 0 Fehler. Neu: `UXRegressionTests` (Core, 7 Tests) und das Target
+  `FlostedAppTests` mit `CanvasBehaviorTests` (7 Tests, AppKit-Views offscreen
+  mit synthetischen Ereignissen).
+- Die Nutzerinstanz wurde regulär beendet und aus `dist/Flosted.app` neu gestartet.
+  Die Sichtprüfung am Bildschirm ist offen: Screenshots waren ohne
+  Bildschirmaufnahme-Berechtigung nicht möglich, Systemeinstellungen wurden nicht verändert.
+

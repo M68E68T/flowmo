@@ -57,10 +57,12 @@ final class AnnotationGeometryTests: XCTestCase {
             XCTAssertGreaterThan(result.rect.width, 0, "Rechteck \(name) ist normalisiert.")
             XCTAssertGreaterThan(result.rect.height, 0)
             // Round trip: the ends come back out of the frame.
-            let points = AnnotationGeometry.arrowPoints(in: result.rect, flipped: result.flipped)
-            let matches = (abs(points.start.x - origin.x) < 0.001 && abs(points.start.y - origin.y) < 0.001)
-                || (abs(points.end.x - origin.x) < 0.001 && abs(points.end.y - origin.y) < 0.001)
-            XCTAssertTrue(matches, "Startpunkt \(name) muss eine der beiden Ecken sein.")
+            let points = AnnotationGeometry.arrowPoints(in: result.rect, flipped: result.flipped, reversed: result.reversed)
+            XCTAssertEqual(points.start, origin, "Startpunkt \(name)")
+            XCTAssertEqual(points.end, end, "Die Spitze muss dem Zugende \(name) folgen.")
+            let handles = AnnotationGeometry.arrowHandles(flipped: result.flipped, reversed: result.reversed)
+            XCTAssertEqual(handles[0].point(in: result.rect), origin)
+            XCTAssertEqual(handles[1].point(in: result.rect), end)
         }
     }
 }

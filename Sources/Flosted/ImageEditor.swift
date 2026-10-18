@@ -1,5 +1,6 @@
 import AppKit
 import SwiftUI
+import ImageIO
 import FlostedCore
 
 struct ImageEditor: View {
@@ -26,6 +27,9 @@ struct ImageEditor: View {
     @State private var targetKB = 0
     @State private var preview: NSImage?
     @State private var compressedBytes = 0
+    @State private var effectiveQuality = 0.8
+    @State private var previewBusy = false
+    @State private var previewError: String?
     @State private var saving = false
     @State private var errorMessage: String?
     private let accent = ReferenceStyle.accent
@@ -43,7 +47,7 @@ struct ImageEditor: View {
     var body: some View {
         ReferenceSurface {
             VStack(spacing: 0) {
-                ReferenceHeader(title: tr(action == .crop ? "editor.crop" : action == .background ? "editor.background" : "editor.compress"), close: cancel)
+                ReferenceHeader(title: tr(action == .crop ? "editor.crop" : action == .background ? "editor.background" : "editor.compress"), close: cancel).disabled(saving)
                 ZStack {
                     if action == .crop {
                         CropCanvas(image: image, selection: $selection, ratio: ratio).padding(22)
@@ -51,7 +55,8 @@ struct ImageEditor: View {
                         Image(nsImage: preview).resizable().interpolation(.high).scaledToFit().padding(action == .background ? 12 : 22)
                     } else { ProgressView().controlSize(.small) }
                 }
-                .frame(maxWidth: .infinity,minHeight:340,maxHeight: .infinity)
+                .frame(maxWidth: .infinity,minHeight:action == .compress ? 300 : 340,maxHeight: .infinity)
+                .allowsHitTesting(!saving)
                 .background(action == .background ? Color.black.opacity(0.035) : .clear,in:RoundedRectangle(cornerRadius:9))
                 .padding(.horizontal,action == .background ? 12 : 0)
                 .padding(.top,action == .background ? 10 : 0)
@@ -59,7 +64,7 @@ struct ImageEditor: View {
                     if action == .crop { cropControls }
                     else if action == .background { backgroundControls }
                     else { compressionControls }
-                }.padding(.horizontal,16).padding(.vertical,15)
+                }.padding(.horizontal,16).padding(.vertical,15).disabled(saving)
                 HStack {
                     Button("editor.reset",action:reset).buttonStyle(ReferenceActionButton()).help(Text("help.resetEditor"))
                     Spacer()
@@ -67,6 +72,7 @@ struct ImageEditor: View {
                     Button(tr(action == .background ? "editor.saveWithBackground" : action == .crop ? "editor.apply" : "editor.save"),action:save)
                         .buttonStyle(ReferenceActionButton(primary:true)).keyboardShortcut(.defaultAction)
                         .help(Text("help.saveEditor"))
+                        .disabled(action == .compress && (previewBusy || previewError != nil))
                 }.padding(13).disabled(saving)
                     .overlay(alignment:.top) { Rectangle().fill(.black.opacity(0.075)).frame(height:0.6) }
             }
@@ -144,13 +150,22 @@ struct ImageEditor: View {
         }
     }
     private var compressionControls: some View {
-        VStack(alignment: .leading, spacing: 14) {
+        VStack(alignment: .leading, spacing: 10) {
             slider("editor.quality", value: $quality, range: 0.05...1, suffix: "%", multiplier: 100, help: "help.quality")
             slider("editor.scale", value: $scale, range: 0.1...1, suffix: "%", multiplier: 100, help: "help.scale")
             Text("\(Int(Double(image.width) * scale)) × \(Int(Double(image.height) * scale)) px")
                 .font(.system(size: 12, design: .monospaced))
-            Text(tr("editor.estimatedSize", ByteCountFormatter.string(fromByteCount: Int64(compressedBytes), countStyle: .file)))
-                .font(.subheadline)
+            VStack(alignment: .leading, spacing: 3) {
+                Text(tr("editor.estimatedSize", ByteCountFormatter.string(fromByteCount: Int64(compressedBytes), countStyle: .file)))
+                    .font(.subheadline)
+                if let previewError {
+                    Text(previewError).font(.system(size: 10)).foregroundStyle(accent)
+                        .fixedSize(horizontal: false, vertical: true)
+                } else if targetKB > 0 {
+                    Text(tr("editor.effectiveQuality", Int((effectiveQuality * 100).rounded())))
+                        .font(.system(size: 10)).foregroundStyle(.secondary)
+                }
+            }
             // Labelled like the sliders: with a value always present the field's
             // own placeholder never shows, which left it unexplained before.
             VStack(alignment: .leading, spacing: 4) {
@@ -187,7 +202,7 @@ struct ImageEditor: View {
         style.gradient = gradient; style.third = third; style.aspect = aspect; style.padding = padding; style.cornerRadius = radius; style.shadow = shadow
         return style
     }
-    private var previewKey: String { "\(padding)|\(radius)|\(shadow)|\(gradient)|\(first)|\(second)|\(String(describing:third))|\(aspect)|\(quality)|\(scale)|\(backdropVersion)" }
+    private var previewKey: String { "\(padding)|\(radius)|\(shadow)|\(gradient)|\(first)|\(second)|\(String(describing:third))|\(aspect)|\(quality)|\(scale)|\(targetKB)|\(backdropVersion)" }
     private func applyPreset(_ index:Int) {
         selectedPreset=index;gradient=true;backdrop=nil;backdropVersion += 1;first=color(presets[index].0);second=color(presets[index].1)
         third=index == 0 ? RGB(0.35,0.22,0.86) : nil
@@ -222,22 +237,34 @@ struct ImageEditor: View {
     }
     private func updatePreview() async {
         guard action != .crop else { return }
+        previewBusy = true; previewError = nil
         let currentStyle = style, q = quality, s = scale, source = image, tool = action, backdropImage = backdrop
+        let limit = JPEGCompression.byteLimit(kilobytes: targetKB)
+        let work = Task.detached(priority: .userInitiated) { () -> (CGImage, Int, Double) in
+            if tool == .background {
+                return (try ImageTools.background(source, style: currentStyle, backdrop: backdropImage, previewLimit: 1000), 0, q)
+            }
+            let scaled = try ImageTools.resize(source, scale: s)
+            let encoded = try JPEGCompression.encode(scaled, quality: q, targetBytes: limit)
+            guard let data = CGImageSourceCreateWithData(encoded.data as CFData, nil),
+                  let decoded = CGImageSourceCreateImageAtIndex(data, 0, nil) else { throw ConversionError.encoding }
+            return (decoded, encoded.data.count, encoded.quality)
+        }
         do {
-            let result = try await Task.detached(priority: .userInitiated) { () -> (CGImage, Int) in
-                if tool == .background { return (try ImageTools.background(source, style: currentStyle, backdrop:backdropImage, previewLimit: 1000), 0) }
-                let scaled = try ImageTools.resize(source, scale: s)
-                let data = try ImageConverter.encode(scaled, as: .jpg, quality: q)
-                guard let decoded = NSImage(data: data)?.cgImage(forProposedRect: nil, context: nil, hints: nil) else { throw ConversionError.encoding }
-                return (decoded, data.count)
-            }.value
+            let result = try await withTaskCancellationHandler(operation: { try await work.value }, onCancel: { work.cancel() })
             guard !Task.isCancelled else { return }
-            preview = NSImage(cgImage: result.0, size: .zero); compressedBytes = result.1
-        } catch { if !Task.isCancelled { errorMessage = error.localizedDescription } }
+            preview = NSImage(cgImage: result.0, size: .zero)
+            compressedBytes = result.1; effectiveQuality = result.2; previewBusy = false
+        } catch {
+            guard !Task.isCancelled else { return }
+            previewBusy = false
+            if action == .compress { previewError = error.localizedDescription }
+            else { errorMessage = error.localizedDescription }
+        }
     }
     private func save() {
         guard !saving else { return }; saving = true
-        let source = image, selected = selection, currentStyle = style, q = quality, s = scale, limit = max(0, min(targetKB, 1_000_000)), tool = action, input = file, backdropImage=backdrop
+        let source = image, selected = selection, currentStyle = style, q = quality, s = scale, limit = JPEGCompression.byteLimit(kilobytes: targetKB), tool = action, input = file, backdropImage=backdrop
         Task {
             do {
                 let output = try await Task.detached(priority: .userInitiated) { () -> URL in
@@ -249,18 +276,7 @@ struct ImageEditor: View {
                         data = try ImageConverter.encode(ImageTools.background(source, style: currentStyle, backdrop:backdropImage), as: .png); ext = "png"; suffix = "background"
                     default:
                         let scaled = try ImageTools.resize(source, scale: s)
-                        var encoded = try ImageConverter.encode(scaled, as: .jpg, quality: q)
-                        if limit > 0, encoded.count > limit * 1000 {
-                            var low = 0.05, high = q
-                            var best = try ImageConverter.encode(scaled, as: .jpg, quality: low)
-                            guard best.count <= limit * 1000 else { throw SizeLimitError() }
-                            for _ in 0..<8 {
-                                let mid = (low + high) / 2
-                                let attempt = try ImageConverter.encode(scaled, as: .jpg, quality: mid)
-                                if attempt.count <= limit * 1000 { best = attempt; low = mid } else { high = mid }
-                            }
-                            encoded = best
-                        }
+                        let encoded = try JPEGCompression.encode(scaled, quality: q, targetBytes: limit).data
                         data = encoded; ext = "jpg"; suffix = "compressed"
                     }
                     return try OutputWriter.write(data, beside: input, suffix: suffix, extension: ext)
@@ -270,10 +286,6 @@ struct ImageEditor: View {
         }
     }
 }
-private struct SizeLimitError: LocalizedError {
-    var errorDescription: String? { tr("error.sizeLimit") }
-}
-
 struct CropCanvas: NSViewRepresentable {
     let image: CGImage
     @Binding var selection: CGRect
@@ -289,7 +301,12 @@ final class CropSelectionView: NSView {
     var selection = CGRect(x: 0, y: 0, width: 1, height: 1)
     var ratio = 0.0
     var changed: ((CGRect) -> Void)?
-    private var anchor: CGPoint?
+    private enum Gesture {
+        case resize(CropHandle, CGRect)
+        case move(CGPoint, CGRect)
+        case create(CGPoint)
+    }
+    private var gesture: Gesture?
     private var imageRect: CGRect {
         guard let image else { return .zero }
         let factor = min(bounds.width / Double(image.width), bounds.height / Double(image.height))
@@ -297,25 +314,38 @@ final class CropSelectionView: NSView {
         return CGRect(x: bounds.midX-size.width/2, y: bounds.midY-size.height/2, width: size.width, height: size.height)
     }
     override func resetCursorRects() { addCursorRect(bounds, cursor: .crosshair) }
+    private var cropRect: CGRect {
+        let area = imageRect
+        return CGRect(x: area.minX + selection.minX * area.width, y: area.minY + selection.minY * area.height,
+                      width: selection.width * area.width, height: selection.height * area.height)
+    }
     override func mouseDown(with event: NSEvent) {
         let point = convert(event.locationInWindow, from: nil)
-        guard imageRect.contains(point) else { return }; anchor = clamped(point)
+        // Grips protrude beyond the image, so test them before the image/body.
+        if let handle = CropGeometry.handle(at: point, in: cropRect) { gesture = .resize(handle, cropRect) }
+        else if cropRect.contains(point), selection != CGRect(x: 0, y: 0, width: 1, height: 1) { gesture = .move(point, cropRect) }
+        else if imageRect.contains(point) { gesture = .create(clamped(point)) }
     }
     override func mouseDragged(with event: NSEvent) {
-        guard let anchor else { return }
-        var end = clamped(convert(event.locationInWindow, from: nil))
-        if ratio > 0 {
-            let dx = end.x-anchor.x, dy = end.y-anchor.y
-            let width = min(abs(dx), abs(dy) * ratio)
-            end = CGPoint(x: anchor.x + (dx < 0 ? -width : width), y: anchor.y + (dy < 0 ? -width/ratio : width/ratio))
+        let point = clamped(convert(event.locationInWindow, from: nil))
+        let rect: CGRect
+        switch gesture {
+        case .resize(let handle, let original):
+            rect = CropGeometry.resize(original, handle: handle, to: point, in: imageRect, ratio: ratio)
+        case .move(let start, let original):
+            rect = CropGeometry.move(original, by: CGSize(width: point.x - start.x, height: point.y - start.y), in: imageRect)
+        case .create(let anchor):
+            rect = CropGeometry.resize(CGRect(origin: anchor, size: .zero), handle: .topRight,
+                                       to: point, in: imageRect, ratio: ratio)
+        case nil: return
         }
-        let rect = CGRect(x: min(anchor.x,end.x), y: min(anchor.y,end.y), width: abs(end.x-anchor.x), height: abs(end.y-anchor.y))
         guard rect.width >= 2, rect.height >= 2 else { return }
         let area = imageRect
-        selection = CGRect(x: (rect.minX-area.minX)/area.width, y: (rect.minY-area.minY)/area.height, width: rect.width/area.width, height: rect.height/area.height)
+        selection = CGRect(x: (rect.minX - area.minX) / area.width, y: (rect.minY - area.minY) / area.height,
+                           width: rect.width / area.width, height: rect.height / area.height)
         changed?(selection); needsDisplay = true
     }
-    override func mouseUp(with event: NSEvent) { anchor = nil }
+    override func mouseUp(with event: NSEvent) { gesture = nil }
     private func clamped(_ point: CGPoint) -> CGPoint {
         let rect = imageRect
         return CGPoint(x: min(rect.maxX,max(rect.minX,point.x)), y: min(rect.maxY,max(rect.minY,point.y)))

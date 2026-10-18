@@ -104,7 +104,7 @@
 "error.sizeLimit" = "That target size cannot be reached at this resolution. Please reduce the scale or allow a larger limit.";
 
 /* Hover explanations */
-"help.tools" = "Shows Crop, Add BG and Compress in the wheel instead of the output formats.";
+"help.tools" = "Shows editing tools instead of the output formats.";
 "help.settings" = "Set the key combination and the opacity.";
 "help.chooseFiles" = "Pick files to convert.";
 "help.trySample" = "Creates a sample image so you can try the workflow without your own file.";
@@ -237,3 +237,16 @@
 "help.zoom" = "Zoom the view in or out. “Fit” shows the whole page.";
 
 /* Build hook --export-iconset (stderr) */
+
+/* Standard editing and non-interactive illustrations. */
+"menu.edit" = "Edit";
+"menu.undo" = "Undo";
+"menu.redo" = "Redo";
+"menu.cut" = "Cut";
+"menu.copy" = "Copy";
+"menu.paste" = "Paste";
+"menu.selectAll" = "Select All";
+"intro.wheelIllustration" = "Illustration of the radial menu";
+"settings.toolsDisabledHint" = "Without an extra key, tools are disabled during Finder drags. They remain available in the app window.";
+"editor.effectiveQuality" = "Effective quality with size limit: %d %%";
+"pages.page" = "Page %d";

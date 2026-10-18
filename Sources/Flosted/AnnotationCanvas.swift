@@ -40,22 +40,25 @@ final class AnnotationCanvasView: NSView {
     var backdrop: CGImage? { didSet { needsDisplay = true } }
     var annotations: [Annotation] = [] { didSet { needsDisplay = true } }
     var signatures: [String: CGImage] = [:] { didSet { needsDisplay = true } }
+    var logicalSize: CGSize = .zero
+    var selectionChanged: ((UUID?) -> Void)?
     var tool: AnnotationTool = .select
     var style = AnnotationStyle()
     var page = 0
+    var began: (() -> Void)?
     var changed: (([Annotation]) -> Void)?
     /// Only fired once a gesture is finished. `changed` runs on every mouse
     /// move, which would otherwise fill the undo stack with hundreds of steps.
     var committed: (([Annotation]) -> Void)?
     var requestsText: ((UUID) -> Void)?
     var requestsSignature: ((UUID) -> Void)?
-    var selected: UUID? { didSet { needsDisplay = true } }
+    var selected: UUID? { didSet { needsDisplay = true; if oldValue != selected { selectionChanged?(selected) } } }
 
     private var dragStart: CGPoint?
     private var dragCurrent: CGPoint?
     private var movingID: UUID?
     private var moveOffset = CGSize.zero
-    private var resizing: (id: UUID, handle: ResizeHandle)?
+    private var resizing: (annotation: Annotation, handle: ResizeHandle)?
     private let handle: CGFloat = 9
 
     override var acceptsFirstResponder: Bool { true }
@@ -72,7 +75,7 @@ final class AnnotationCanvasView: NSView {
                       width: size.width, height: size.height)
     }
     private func handles(for annotation: Annotation) -> [ResizeHandle] {
-        annotation.kind == .arrow ? ResizeHandle.arrowEnds : ResizeHandle.allCases
+        annotation.kind == .arrow ? AnnotationGeometry.arrowHandles(flipped: annotation.arrowFlipped, reversed: annotation.arrowReversed) : ResizeHandle.allCases
     }
     private func normalized(_ rect: CGRect) -> CGRect {
         let area = contentRect
@@ -82,6 +85,7 @@ final class AnnotationCanvasView: NSView {
     }
 
     override func mouseDown(with event: NSEvent) {
+        began?()
         window?.makeFirstResponder(self)
         let point = convert(event.locationInWindow, from: nil)
         // Handles first: an element covers its own corners, so testing the
@@ -91,7 +95,7 @@ final class AnnotationCanvasView: NSView {
            let grabbed = AnnotationGeometry.handle(at: point, of: annotation.rect(in: contentRect),
                                                    candidates: handles(for: annotation),
                                                    tolerance: handle) {
-            resizing = (current, grabbed)
+            resizing = (annotation, grabbed)
             return
         }
         let hit = annotations.on(page: page).reversed()
@@ -123,15 +127,19 @@ final class AnnotationCanvasView: NSView {
     }
     override func mouseDragged(with event: NSEvent) {
         let point = convert(event.locationInWindow, from: nil)
-        if let resizing, let index = annotations.firstIndex(where: { $0.id == resizing.id }) {
-            let rect = annotations[index].rect(in: contentRect)
-            if annotations[index].kind == .arrow {
+        if let resizing, let index = annotations.firstIndex(where: { $0.id == resizing.annotation.id }) {
+            let rect = resizing.annotation.rect(in: contentRect)
+            if resizing.annotation.kind == .arrow {
                 // The dragged end follows the pointer, the other stays put.
-                let fixed = AnnotationGeometry.arrowPoints(in: rect, flipped: annotations[index].arrowFlipped)
-                let anchor = resizing.handle == .bottomLeft ? fixed.end : fixed.start
-                let result = AnnotationGeometry.arrow(from: anchor, to: point)
+                let annotation = resizing.annotation
+                let fixed = AnnotationGeometry.arrowPoints(in: rect, flipped: annotation.arrowFlipped,
+                                                           reversed: annotation.arrowReversed)
+                let movingStart = resizing.handle == handles(for: annotation)[0]
+                let result = movingStart ? AnnotationGeometry.arrow(from: point, to: fixed.end)
+                    : AnnotationGeometry.arrow(from: fixed.start, to: point)
                 annotations[index].frame = normalized(result.rect)
                 annotations[index].arrowFlipped = result.flipped
+                annotations[index].arrowReversed = result.reversed
             } else {
                 annotations[index].frame = normalized(AnnotationGeometry.resize(rect, handle: resizing.handle, to: point))
             }
@@ -157,12 +165,12 @@ final class AnnotationCanvasView: NSView {
         var rect = CGRect(x: min(start.x, end.x), y: min(start.y, end.y),
                           width: abs(end.x - start.x), height: abs(end.y - start.y))
         // A plain click gets a usable default box instead of nothing.
-        if rect.width < 6 || rect.height < 6 {
+        if tool == .arrow ? hypot(end.x - start.x, end.y - start.y) < 6 : (rect.width < 6 || rect.height < 6) {
             let fallback = tool == .signature ? CGSize(width: 190, height: 70) : CGSize(width: 170, height: 34)
             rect = CGRect(origin: start, size: fallback)
         }
         rect = rect.intersection(contentRect)
-        guard rect.width > 2, rect.height > 2 else { return }
+        guard tool == .arrow ? (rect.width > 2 || rect.height > 2) : (rect.width > 2 && rect.height > 2) else { return }
         let kind: AnnotationKind
         switch tool {
         case .select: return
@@ -173,11 +181,23 @@ final class AnnotationCanvasView: NSView {
         case .highlight: kind = .highlight
         case .redaction: kind = .redaction
         }
-        let annotation = Annotation(kind: kind, frame: normalized(rect), style: style, page: page)
+        var annotation = Annotation(kind: kind, frame: normalized(rect), style: style, page: page)
+        if tool == .arrow {
+            let clicked = hypot(end.x - start.x, end.y - start.y) < 6
+            let area = contentRect
+            let tip = clicked ? CGPoint(x: rect.maxX, y: rect.maxY)
+                : CGPoint(x: min(area.maxX, max(area.minX, end.x)), y: min(area.maxY, max(area.minY, end.y)))
+            let arrow = AnnotationGeometry.arrow(from: start, to: tip)
+            annotation.frame = normalized(arrow.rect)
+            annotation.arrowFlipped = arrow.flipped
+            annotation.arrowReversed = arrow.reversed
+        }
         annotations.append(annotation)
         selected = annotation.id
         changed?(annotations)
-        committed?(annotations)
+        // Content is a draft until the dialog succeeds. Never put a blank
+        // text/signature frame into undo history.
+        if tool != .text && tool != .signature { committed?(annotations) }
         // Ask only once the frame exists — otherwise there is nothing to
         // assign the result to and the choice would be dropped.
         if case .text = kind { requestsText?(annotation.id) }
@@ -199,7 +219,7 @@ final class AnnotationCanvasView: NSView {
             context.interpolationQuality = .high
             context.draw(backdrop, in: area)
         }
-        AnnotationRenderer.draw(annotations.on(page: page), in: context, bounds: area, signatures: signatures)
+        AnnotationRenderer.draw(annotations.on(page: page), in: context, bounds: area, signatures: signatures, logicalSize: logicalSize)
         // Empty text and unassigned signatures would be invisible otherwise.
         for annotation in annotations.on(page: page) {
             let rect = annotation.rect(in: area)
@@ -236,11 +256,13 @@ struct AnnotationCanvas: NSViewRepresentable {
     @Binding var annotations: [Annotation]
     @Binding var selected: UUID?
     let signatures: [String: CGImage]
+    let logicalSize: CGSize
     let tool: AnnotationTool
     let style: AnnotationStyle
     let page: Int
     let requestsText: (UUID) -> Void
     let requestsSignature: (UUID) -> Void
+    let began: () -> Void
     let committed: ([Annotation]) -> Void
 
     func makeNSView(context: Context) -> AnnotationCanvasView { AnnotationCanvasView(frame: .zero) }
@@ -248,13 +270,16 @@ struct AnnotationCanvas: NSViewRepresentable {
         view.backdrop = backdrop
         if view.annotations != annotations { view.annotations = annotations }
         view.signatures = signatures
+        view.logicalSize = logicalSize
         view.tool = tool
         view.style = style
         view.page = page
         if view.selected != selected { view.selected = selected }
+        view.selectionChanged = { next in if selected != next { selected = next } }
         view.changed = { annotations = $0 }
         view.requestsText = requestsText
         view.requestsSignature = requestsSignature
+        view.began = began
         view.committed = committed
         view.window?.invalidateCursorRects(for: view)
     }

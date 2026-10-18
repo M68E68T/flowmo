@@ -114,8 +114,10 @@ Build: bash scripts/build-app.sh
 Test: swift test --cache-path .build/cache --config-path .build/config --security-path .build/security
 Restricted execution may need --disable-sandbox for SwiftPM's nested sandbox.
 Run: dist/Flosted.app (or bash Starten.command).
-Fifty-four existing tests cover processing, collision safety, PDF/DOCX, menu models,
-modifier combinations and preference persistence.
+Seventy tests cover processing, collision safety, PDF/DOCX, menu models,
+modifier combinations, preference persistence and the UX regressions from
+docs/UI_UX_AUDIT.md. FlostedAppTests drives AppKit views offscreen with synthetic
+events; it never posts events to the user's desktop.
 App bundle is ad hoc signed, NOT Developer ID signed/notarized.
 Keep caches/binaries out of future git commits; distributable binaries belong in Releases.
 

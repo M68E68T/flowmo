@@ -43,3 +43,11 @@ public struct UndoStack<Value> {
         return present
     }
 }
+
+public extension UndoStack where Value: Equatable {
+    /// A click without a move, or restoring an unchanged draft, is not an edit.
+    mutating func commitIfChanged(_ value: Value) {
+        guard value != current else { return }
+        commit(value)
+    }
+}

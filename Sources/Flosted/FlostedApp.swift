@@ -60,6 +60,8 @@ enum FlostedApp {
 /// afterwards; a click inside the dashboard must not hide it under the cursor.
 enum ActionOrigin { case floatingMenu, dashboard }
 
+enum DashboardLayout { static let size = CGSize(width: 420, height: 550) }
+
 @MainActor
 final class AppController: NSObject, NSApplicationDelegate, ObservableObject {
     @Published var selection: [URL] = []
@@ -75,6 +77,7 @@ final class AppController: NSObject, NSApplicationDelegate, ObservableObject {
     private var introWindow: NSWindow?
     private var editors: [NSWindowController] = []
     private var statusItem: NSStatusItem?
+    private var closeObserver: NSObjectProtocol?
 
     var readyMessage: String { tr("status.ready", preferences.openCombo.symbols) }
 
@@ -91,6 +94,15 @@ final class AppController: NSObject, NSApplicationDelegate, ObservableObject {
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         status = readyMessage
+        closeObserver = NotificationCenter.default.addObserver(forName: NSWindow.willCloseNotification,
+            object: nil, queue: .main) { [weak self] notification in
+                MainActor.assumeIsolated {
+                    guard let self, let closed = notification.object as? NSWindow else { return }
+                    self.editors.removeAll { $0.window === closed }
+                    if self.settingsWindow === closed { self.settingsWindow = nil }
+                    if self.introWindow === closed { self.introWindow = nil }
+                }
+            }
         drag.preferences = preferences
         drag.isBusy = { [weak self] in self?.busy ?? true }
         drag.perform = { [weak self] in self?.perform($0, files: $1, origin: .floatingMenu) }
@@ -106,7 +118,7 @@ final class AppController: NSObject, NSApplicationDelegate, ObservableObject {
     func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool { showMain(); return true }
     @objc func showMain() {
         if mainWindow == nil {
-            let window = ReferenceWindow(size:CGSize(width:420,height:530),title:"Flosted")
+            let window = ReferenceWindow(size: DashboardLayout.size, title: "Flosted")
             window.identifier = NSUserInterfaceItemIdentifier("flosted.main")
             window.contentViewController = NSHostingController(rootView: Dashboard(controller: self))
             window.center(); mainWindow = window
@@ -148,10 +160,13 @@ final class AppController: NSObject, NSApplicationDelegate, ObservableObject {
     /// windows would otherwise show through each other.
     private func place(_ window: NSWindow?) {
         guard let window else { return }
-        guard let main = mainWindow, main.isVisible else { window.center(); return }
-        let area = (main.screen ?? NSScreen.main)?.visibleFrame ?? main.frame
-        window.setFrame(WindowPlacement.beside(main.frame, size: window.frame.size, in: area),
-                        display: false)
+        let candidates = [NSApp.keyWindow, mainWindow, settingsWindow, introWindow]
+            + editors.reversed().map(\.window)
+        guard let anchor = candidates.compactMap({ $0 }).first(where: { $0 !== window && $0.isVisible }) else {
+            window.center(); return
+        }
+        let area = (anchor.screen ?? NSScreen.main)?.visibleFrame ?? anchor.frame
+        window.setFrame(WindowPlacement.beside(anchor.frame, size: window.frame.size, in: area), display: false)
     }
     @objc private func quit() { NSApp.terminate(nil) }
     private func updateMenu() {
@@ -171,6 +186,21 @@ final class AppController: NSObject, NSApplicationDelegate, ObservableObject {
         let fileItem = NSMenuItem(); let fileMenu = NSMenu(title: tr("menu.file"))
         let choose = NSMenuItem(title: tr("menu.chooseFiles"), action: #selector(chooseFiles), keyEquivalent: "o"); choose.target = self
         fileMenu.addItem(choose); fileItem.submenu = fileMenu; bar.addItem(fileItem)
+        let editItem = NSMenuItem(); let editMenu = NSMenu(title: tr("menu.edit"))
+        for (key, action, equivalent, modifiers) in [
+            ("menu.undo", "undo:", "z", NSEvent.ModifierFlags.command),
+            ("menu.redo", "redo:", "z", NSEvent.ModifierFlags([.command, .shift])),
+            ("menu.cut", "cut:", "x", NSEvent.ModifierFlags.command),
+            ("menu.copy", "copy:", "c", NSEvent.ModifierFlags.command),
+            ("menu.paste", "paste:", "v", NSEvent.ModifierFlags.command),
+            ("menu.selectAll", "selectAll:", "a", NSEvent.ModifierFlags.command)
+        ] {
+            let item = NSMenuItem(title: tr(key), action: Selector(action), keyEquivalent: equivalent)
+            item.keyEquivalentModifierMask = modifiers
+            editMenu.addItem(item)
+            if key == "menu.redo" { editMenu.addItem(.separator()) }
+        }
+        editItem.submenu = editMenu; bar.addItem(editItem)
         NSApp.mainMenu = bar
     }
     @objc func chooseFiles() {
@@ -183,6 +213,7 @@ final class AppController: NSObject, NSApplicationDelegate, ObservableObject {
     func select(_ urls: [URL]) {
         guard !busy else { return }
         selection = urls; outputs = []
+        if ActionCatalog.actions(for: urls, tools: true).isEmpty { tools = false }
         if ActionCatalog.actions(for: urls, tools: false).isEmpty { status = tr("status.unsupportedSelection") }
         else { status = tr("status.selected", urls.count) }
     }
@@ -205,6 +236,7 @@ final class AppController: NSObject, NSApplicationDelegate, ObservableObject {
     func perform(_ action: FileAction, files: [URL], origin: ActionOrigin = .dashboard) {
         guard !busy, !files.isEmpty else { return }
         selection = files; outputs = []; failure = nil
+        if case .convert = action { tools = false } else { tools = true }
         switch action {
         case .convert(let format):
             busy = true; status = tr("status.creating", format.rawValue)
@@ -219,7 +251,7 @@ final class AppController: NSObject, NSApplicationDelegate, ObservableObject {
                 }.value
                 outputs = report.0; busy = false
                 status = report.0.isEmpty ? tr("status.none") : tr("status.saved", report.0.count)
-                if !report.1.isEmpty { failure = report.1.joined(separator: "\n") }
+                if !report.1.isEmpty { failure = report.1.joined(separator: "\n"); showMain() }
                 // Clear the screen after a clean drop; errors must stay visible.
                 if origin == .floatingMenu, report.1.isEmpty { hideMain() }
                 showToast(report.1.isEmpty ? status : tr("status.convertedWithErrors"))
@@ -268,11 +300,12 @@ final class AppController: NSObject, NSApplicationDelegate, ObservableObject {
             self?.outputs = [output]; self?.status = tr("status.savedAs", output.lastPathComponent); window?.close()
             NSWorkspace.shared.activateFileViewerSelecting([output])
         }, cancel: { [weak window] in window?.close() })
-        window.contentViewController = NSHostingController(rootView: editor)
+        let hosting = NSHostingController(rootView: WindowSizedRoot(dimensions: window.dimensions, content: editor))
+        hosting.sizingOptions = []
+        window.contentViewController = hosting
         let owner = NSWindowController(window: window); editors.append(owner)
         place(window)
-        if let previous = editors.dropLast().last?.window { window.cascadeTopLeft(from: previous.frame.origin) }
-        owner.showWindow(nil); NSApp.activate(ignoringOtherApps: true)
+        owner.showWindow(nil); window.makeKeyAndOrderFront(nil); NSApp.activate(ignoringOtherApps: true)
         status = tr("status.opened", tr("editor.annotate"))
     }
     private func openPageManager(_ file: URL, document: PDFDocument) {
@@ -284,8 +317,7 @@ final class AppController: NSObject, NSApplicationDelegate, ObservableObject {
         window.contentViewController = NSHostingController(rootView: manager)
         let owner = NSWindowController(window: window); editors.append(owner)
         place(window)
-        if let previous = editors.dropLast().last?.window { window.cascadeTopLeft(from: previous.frame.origin) }
-        owner.showWindow(nil); NSApp.activate(ignoringOtherApps: true)
+        owner.showWindow(nil); window.makeKeyAndOrderFront(nil); NSApp.activate(ignoringOtherApps: true)
         status = tr("status.opened", tr("pages.title"))
     }
     private func openEditor(_ file: URL, image: CGImage, action: FileAction) {
@@ -298,9 +330,7 @@ final class AppController: NSObject, NSApplicationDelegate, ObservableObject {
         window.contentViewController = NSHostingController(rootView: editor)
         let owner = NSWindowController(window: window); editors.append(owner)
         place(window)
-        // Further editors step away from the previous one instead of hiding it.
-        if let previous = editors.dropLast().last?.window { window.cascadeTopLeft(from: previous.frame.origin) }
-        owner.showWindow(nil); NSApp.activate(ignoringOtherApps: true)
+        owner.showWindow(nil); window.makeKeyAndOrderFront(nil); NSApp.activate(ignoringOtherApps: true)
         status = tr("status.opened", title)
     }
     private func showToast(_ text: String) {
@@ -328,7 +358,7 @@ struct Dashboard: View {
                 ReferenceHeader(title:"Flosted",close:controller.hideMain)
                 HStack {
                     Spacer()
-                    if controller.selection.count == 1,controller.selection.first.map(FileKind.detect) == .image {
+                    if !ActionCatalog.actions(for: controller.selection, tools: true).isEmpty {
                         Toggle("dashboard.tools",isOn:$controller.tools).toggleStyle(.button).controlSize(.small)
                             .help(Text("help.tools"))
                     }
@@ -359,6 +389,7 @@ struct Dashboard: View {
                 if controller.selection.first.map(FileKind.detect) == .pdf {
                     Text("dashboard.docxNote")
                         .font(.system(size: 10)).foregroundStyle(.secondary)
+                        .fixedSize(horizontal: false, vertical: true).padding(.horizontal, 18)
                 }
                 HStack(spacing: 7) {
                     if controller.busy { ProgressView().controlSize(.small) }
@@ -380,6 +411,7 @@ struct Dashboard: View {
                     .overlay(alignment:.top) { Rectangle().fill(.black.opacity(0.075)).frame(height:0.6) }
             }
         }
+        .frame(width: DashboardLayout.size.width, height: DashboardLayout.size.height)
         .alert("Flosted", isPresented: Binding(get: { controller.failure != nil }, set: { if !$0 { controller.failure = nil } })) {
             Button("common.ok") { controller.failure = nil }
         } message: { Text(controller.failure ?? "") }

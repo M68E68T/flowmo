@@ -7,13 +7,25 @@ public enum AnnotationRenderer {
     /// Draws every annotation into a context whose coordinate space is `bounds`
     /// with a bottom-left origin. Shared by the image and the PDF path.
     public static func draw(_ annotations: [Annotation], in context: CGContext,
-                            bounds: CGRect, signatures: [String: CGImage] = [:]) {
+                            bounds: CGRect, signatures: [String: CGImage] = [:], logicalSize: CGSize? = nil) {
+        // Preview and export use the same source coordinates, including fonts
+        // and strokes. Only the preview's context is scaled to its display size.
+        if let size = logicalSize, size.width > 0, size.height > 0 {
+            context.saveGState()
+            context.translateBy(x: bounds.minX, y: bounds.minY)
+            context.scaleBy(x: bounds.width / size.width, y: bounds.height / size.height)
+            draw(annotations, in: context, bounds: CGRect(origin: .zero, size: size), signatures: signatures)
+            context.restoreGState()
+            return
+        }
         let available = Set(signatures.keys)
         for annotation in annotations {
             // One place for the rule, shared by the image and the PDF path.
             guard annotation.isComplete(signatures: available) else { continue }
             let rect = annotation.rect(in: bounds)
-            guard rect.width > 0, rect.height > 0 else { continue }
+            if annotation.kind == .arrow {
+                guard rect.width > 0 || rect.height > 0 else { continue }
+            } else if rect.width <= 0 || rect.height <= 0 { continue }
             context.saveGState()
             if annotation.rotation != 0 {
                 context.translateBy(x: rect.midX, y: rect.midY)
@@ -28,7 +40,8 @@ public enum AnnotationRenderer {
                 context.setStrokeColor(annotation.style.color.cgColor)
                 context.setLineWidth(annotation.style.lineWidth)
                 context.stroke(rect.insetBy(dx: annotation.style.lineWidth / 2, dy: annotation.style.lineWidth / 2))
-            case .arrow: drawArrow(in: rect, flipped: annotation.arrowFlipped, style: annotation.style, context: context)
+            case .arrow: drawArrow(in: rect, flipped: annotation.arrowFlipped,
+                                   reversed: annotation.arrowReversed, style: annotation.style, context: context)
             case .highlight:
                 // Multiply keeps the text underneath readable.
                 context.setBlendMode(.multiply)
@@ -56,10 +69,10 @@ public enum AnnotationRenderer {
         CTFrameDraw(frame, context)
     }
 
-    private static func drawArrow(in rect: CGRect, flipped: Bool, style: AnnotationStyle, context: CGContext) {
-        let (start, end) = AnnotationGeometry.arrowPoints(in: rect, flipped: flipped)
+    private static func drawArrow(in rect: CGRect, flipped: Bool, reversed: Bool, style: AnnotationStyle, context: CGContext) {
+        let (start, end) = AnnotationGeometry.arrowPoints(in: rect, flipped: flipped, reversed: reversed)
         let angle = atan2(end.y - start.y, end.x - start.x)
-        let head = max(8, style.lineWidth * 5)
+        let head = min(max(8, style.lineWidth * 5), hypot(end.x - start.x, end.y - start.y) * 0.7)
         context.setStrokeColor(style.color.cgColor)
         context.setFillColor(style.color.cgColor)
         context.setLineWidth(style.lineWidth)

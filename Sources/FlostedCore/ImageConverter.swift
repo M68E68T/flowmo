@@ -26,7 +26,7 @@ public enum OutputFormat: String, CaseIterable, Sendable {
 }
 
 public enum ConversionError: LocalizedError {
-    case unreadable, animatedImage, unsupportedOutput, encoding, lockedPDF, noText, tooLarge
+    case unreadable, animatedImage, unsupportedOutput, encoding, lockedPDF, noText, tooLarge, sizeLimit
     /// Resolved against Bundle.main, which is the app at runtime. In tests the
     /// key itself comes back; the tests assert on cases, not on wording.
     public var errorDescription: String? {
@@ -39,6 +39,7 @@ public enum ConversionError: LocalizedError {
         case .lockedPDF: key = "error.lockedPDF"
         case .noText: key = "error.noText"
         case .tooLarge: key = "error.tooLarge"
+        case .sizeLimit: key = "error.sizeLimit"
         }
         return NSLocalizedString(key, bundle: .main, comment: "")
     }
@@ -61,7 +62,9 @@ public enum OutputWriter {
 public enum ImageConverter {
     public static func decode(_ input: URL) throws -> CGImage {
         guard let source = CGImageSourceCreateWithURL(input as CFURL, nil) else { throw ConversionError.unreadable }
-        guard CGImageSourceGetCount(source) == 1 else { throw ConversionError.animatedImage }
+        let count = CGImageSourceGetCount(source)
+        guard count > 0 else { throw ConversionError.unreadable }
+        guard count == 1 else { throw ConversionError.animatedImage }
         let props = CGImageSourceCopyPropertiesAtIndex(source, 0, nil) as? [String: Any]
         let width = props?[kCGImagePropertyPixelWidth as String] as? Int ?? 1
         let height = props?[kCGImagePropertyPixelHeight as String] as? Int ?? 1

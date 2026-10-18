@@ -104,7 +104,7 @@
 "error.sizeLimit" = "Die Zielgröße ist mit dieser Auflösung nicht erreichbar. Bitte die Größe verringern oder ein höheres Limit wählen.";
 
 /* Erklärungen beim Daraufzeigen */
-"help.tools" = "Zeigt im Kreis Zuschneiden, Hintergrund und Komprimieren statt der Ausgabeformate.";
+"help.tools" = "Zeigt die Bearbeitungswerkzeuge statt der Ausgabeformate.";
 "help.settings" = "Tastenkombination und Deckkraft einstellen.";
 "help.chooseFiles" = "Dateien zum Umwandeln auswählen.";
 "help.trySample" = "Erzeugt ein Beispielbild, damit du den Ablauf ohne eigene Datei ausprobieren kannst.";
@@ -237,3 +237,16 @@
 "help.zoom" = "Ansicht vergrößern oder verkleinern. „Einpassen“ zeigt die ganze Seite.";
 
 /* Build-Hook --export-iconset (stderr) */
+
+/* Standard editing and non-interactive illustrations. */
+"menu.edit" = "Bearbeiten";
+"menu.undo" = "Rückgängig";
+"menu.redo" = "Wiederherstellen";
+"menu.cut" = "Ausschneiden";
+"menu.copy" = "Kopieren";
+"menu.paste" = "Einfügen";
+"menu.selectAll" = "Alles auswählen";
+"intro.wheelIllustration" = "Beispieldarstellung des Kreis-Menüs";
+"settings.toolsDisabledHint" = "Ohne Zusatztaste sind die Werkzeuge beim Finder-Ziehen deaktiviert. Im App-Fenster bleiben sie verfügbar.";
+"editor.effectiveQuality" = "Wirksame Qualität mit Größenlimit: %d %%";
+"pages.page" = "Seite %d";
