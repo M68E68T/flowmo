@@ -20,6 +20,9 @@ enum FlostedApp {
             return
         }
         let app = NSApplication.shared
+        // Give the Dock the shared artwork even if it cached a placeholder
+        // before the app bundle received its icon.
+        app.applicationIconImage = BrandMark.image(side: 512, style: .appIcon)
         let controller = AppController()
         app.delegate = controller
         app.setActivationPolicy(.regular)

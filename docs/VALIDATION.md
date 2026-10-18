@@ -4,7 +4,7 @@ Datum: 18.10.2026. Apple-Silicon-Mac, Swift 6.3.2, Sprachmodus Swift 5.
 
 ## Automatisch erfolgreich
 - Release-Build inklusive startbarem .app-Bundle, keine Compiler-Warnungen.
-- Vierundfünfzig XCTest-Fälle, null Fehler.
+- Sechsundfünfzig XCTest-Fälle, null Fehler.
 - PNG/JPG/TIFF-Ausgaben werden erneut als Bilder gelesen, mit korrekten Abmessungen.
 - Originalbytes unverändert; Namenskollisionen erzeugen getrennte neue Dateien.
 - Ungültiger Bildeingang erzeugt keine Ausgabe.
@@ -35,8 +35,19 @@ Datum: 18.10.2026. Apple-Silicon-Mac, Swift 6.3.2, Sprachmodus Swift 5.
 - Werkzeugfenster auf vertikale Anordnung mit festen Vorschauabmessungen umgestellt.
 - Dateidialog- und weitere UI-Tests konnten wegen wiederholter verlorener
   Fensterbindung/paralleler Nutzerinteraktion nicht zuverlässig abgeschlossen werden.
-- HEIC-Kodierung, OCR auf Scans, Editor-Export, Escape und Multi-Monitor-Verhalten
-  sind implementiert, aber noch nicht umfassend praktisch geprüft.
+- **HEIC-Kodierung und Texterkennung sind jetzt belegt**, nicht mehr nur
+  angenommen: PipelineTests wandelt in jedes angebotene Format und liest das
+  Ergebnis zurück, und erkennt Text auf einer Seite, die ihn nur als Bild
+  trägt. Auf diesem Mac sind PNG, JPG, HEIC, TIFF, BMP und AVIF als Encoder
+  vorhanden; WebP kann macOS nur lesen, nicht schreiben.
+- Zusätzlich einmalig gegen echte Dateien in ~/Documents/Flosted-Abnahme
+  gefahren (Vertrag.pdf mit ALPHA/BETA/GAMMA, Foto.png, Gross.jpg, Scan.pdf):
+  Schwärzen entfernte BETA und ließ ALPHA und GAMMA stehen, Annotieren erhielt
+  die Textebene, Seiten ließen sich umsortieren/drehen/löschen, das
+  4000-Pixel-Bild wurde beim Seitenimport korrekt begrenzt, Originale blieben
+  unverändert und ein zweiter Lauf überschrieb nichts.
+- Editor-Bedienung, Escape und Multi-Monitor-Verhalten sind weiterhin nur
+  implementiert, nicht praktisch abgenommen.
 - Einstellungsfenster, Deckkraft-Regler, eigene Tastenkombination und das
   Ausblenden nach dem Drop sind gebaut und durch Tests des Modells abgedeckt,
   aber noch nicht vom Nutzer im Alltag bestätigt (Schritte 8–15 unten).
@@ -265,3 +276,19 @@ Dateizugriffsgrenzen blieben aktiv. Das lokale Bundle ist nur ad hoc signiert.
   Dashboard-Rad erfolgreich; Ergebnis im Finder vorhanden. Ein erneuter echter
   Finder-Drag mit währenddessen gedrückter Auslösetaste sowie eine Sichtprüfung
   im Dock und in der tatsächlichen Menüleiste sind hier nicht separat erfolgt.
+
+## Korrektur des Dock-Symbols vom 19.10.2026
+
+- Doppelten `CFBundleIconFile`-Eintrag entfernt; der verbleibende verweist
+  eindeutig auf `Flosted.icns`. Beim Start setzt die App ihr Symbol ausdrücklich
+  aus derselben `BrandMark`-Zeichenquelle wie das gebündelte Icon.
+- Der Build liest den Icon-Dateinamen aus der Plist und dekodiert sowohl die
+  Quelldatei als auch die fertige Bundle-Datei. Fehlendes und beschädigtes Icon
+  in temporären Projektkopien geprüft: verständlicher Abbruch vor dem Kompilieren.
+- Release-Build, alle 54 bestehenden Tests, Plist-Prüfung und strenge
+  Ad-hoc-Signaturprüfung erfolgreich.
+- Nur das leere Hauptfenster war offen. Die Nutzerinstanz regulär beendet und
+  aus `dist/Flosted.app` neu gestartet; das von `NSRunningApplication.icon`
+  gelieferte Bild zeigt das orange-weiße Logo. Die direkte Sichtprüfung im Dock
+  und App-Umschalter bleibt offen: Der Fernsteuerungszugriff auf das Dock lief
+  in ein Timeout. Es wurden keine Dock-Einstellungen oder System-Caches verändert.

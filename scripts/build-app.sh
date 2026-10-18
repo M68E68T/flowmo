@@ -11,21 +11,34 @@ for LANGUAGE in de en; do
 done
 export CLANG_MODULE_CACHE_PATH="$PROJECT_ROOT/.build/ModuleCache"
 export SWIFTPM_MODULECACHE_OVERRIDE="$PROJECT_ROOT/.build/ModuleCache"
+plutil -lint "$PROJECT_ROOT/Resources/Info.plist"
+ICON_FILE="$(plutil -extract CFBundleIconFile raw -o - "$PROJECT_ROOT/Resources/Info.plist")"
+ICON_BUILD="$PROJECT_ROOT/.build/branding"
+mkdir -p "$ICON_BUILD"
+validate_icon() {
+  local icon_path="$1"
+  # Decode the referenced artwork, rather than only checking its filename.
+  if [ ! -r "$icon_path" ] || ! sips -s format png "$icon_path" \
+      --out "$ICON_BUILD/validated-icon.png" >/dev/null; then
+    printf 'Build abgebrochen: App-Icon fehlt oder ist nicht lesbar: %s\n' "$icon_path" >&2
+    return 1
+  fi
+}
+validate_icon "$PROJECT_ROOT/Resources/$ICON_FILE"
 swift build -c release --cache-path "$PROJECT_ROOT/.build/cache" --config-path "$PROJECT_ROOT/.build/config" --security-path "$PROJECT_ROOT/.build/security" "$@"
 APP_PATH="$PROJECT_ROOT/dist/Flosted.app"
 mkdir -p "$APP_PATH/Contents/MacOS" "$APP_PATH/Contents/Resources"
 cp "$PROJECT_ROOT/.build/release/Flosted" "$APP_PATH/Contents/MacOS/Flosted"
 cp "$PROJECT_ROOT/Resources/Info.plist" "$APP_PATH/Contents/Info.plist"
-cp "$PROJECT_ROOT/Resources/Flosted.icns" "$APP_PATH/Contents/Resources/Flosted.icns"
+cp "$PROJECT_ROOT/Resources/$ICON_FILE" "$APP_PATH/Contents/Resources/$ICON_FILE"
 # Render the shared vector artwork at every standard macOS icon resolution.
 # The generator, PNGs and ICNS are build artifacts, never source assets.
-ICON_BUILD="$PROJECT_ROOT/.build/branding"
-mkdir -p "$ICON_BUILD"
 swiftc -swift-version 5 -O -module-cache-path "$CLANG_MODULE_CACHE_PATH" \
   "$PROJECT_ROOT/Sources/Flosted/BrandMark.swift" \
   "$PROJECT_ROOT/scripts/GenerateAppIcon.swift" -o "$ICON_BUILD/generate-app-icon"
 "$ICON_BUILD/generate-app-icon" "$ICON_BUILD/Flosted.iconset"
-iconutil -c icns "$ICON_BUILD/Flosted.iconset" -o "$APP_PATH/Contents/Resources/Flosted.icns"
+iconutil -c icns "$ICON_BUILD/Flosted.iconset" -o "$APP_PATH/Contents/Resources/$ICON_FILE"
+validate_icon "$APP_PATH/Contents/Resources/$ICON_FILE"
 # Localizations: SwiftUI string literals resolve against Bundle.main.
 # Lint first - macOS silently discards a malformed .strings file as a whole,
 # and every label then falls back to showing its raw key.
