@@ -100,6 +100,31 @@ final class CanvasBehaviorTests: XCTestCase {
         }
         XCTAssertFalse(history.canUndo, "Auswahlklicks dürfen keine echten Änderungen aus dem Verlauf verdrängen.")
     }
+    @MainActor func testDrawingSurfacesNeverDragTheWindow() async throws {
+        // ReferenceWindow moves by its background; a stroke on these views
+        // used to move the whole window by the length of the stroke.
+        XCTAssertTrue(ReferenceWindow(size: CGSize(width: 300, height: 200), title: "Test").isMovableByWindowBackground)
+        XCTAssertFalse(AnnotationCanvasView(frame: .zero).mouseDownCanMoveWindow)
+        XCTAssertFalse(CropSelectionView(frame: .zero).mouseDownCanMoveWindow)
+        XCTAssertFalse(PageDragSource.SourceView(frame: .zero).mouseDownCanMoveWindow)
+    }
+
+    @MainActor func testCropGripOutsideTheImageStillResizes() async throws {
+        let context = try ImageTools.canvas(400, 200)
+        let view = CropSelectionView(frame: CGRect(x: 0, y: 0, width: 444, height: 244))
+        view.image = try XCTUnwrap(context.makeImage())
+        var result: CGRect?
+        view.changed = { result = $0 }
+        // Full selection: the top-right grip sits on the image corner (422, 222).
+        // Press its outer half, beyond the image but inside the view.
+        view.mouseDown(with: try event(.leftMouseDown, at: CGPoint(x: 427, y: 227)))
+        view.mouseDragged(with: try event(.leftMouseDragged, at: CGPoint(x: 322, y: 172)))
+        let crop = try XCTUnwrap(result, "Der Griff muss auch außerhalb des Bildes greifen.")
+        XCTAssertEqual(crop.minX, 0, accuracy: 0.001)
+        XCTAssertEqual(crop.width, 0.75, accuracy: 0.001)
+        XCTAssertEqual(crop.height, 0.75, accuracy: 0.001)
+    }
+
     @MainActor func testEditorWindowRoutesUndoRedoAndZoomWithoutPostingKeys() async throws {
         let window = ReferenceWindow(size: CGSize(width: 300, height: 200), title: "Test")
         var undos = 0, redos = 0, fits = 0, zooms = 0

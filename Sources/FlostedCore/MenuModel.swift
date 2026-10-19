@@ -93,6 +93,23 @@ public enum WindowPlacement {
         let y = min(max(top, screen.minY), max(screen.minY, screen.maxY - size.height))
         return CGRect(origin: CGPoint(x: x, y: y), size: size)
     }
+
+    /// Like `beside`, but when neither side has room it shifts the anchor
+    /// sideways so both still fit next to each other. A wide editor next to the
+    /// dashboard otherwise lands on top of it on a 1440-point screen.
+    public static func pair(_ anchor: CGRect, size: CGSize, in screen: CGRect,
+                            gap: CGFloat = 14) -> (anchor: CGRect, window: CGRect) {
+        let frame = beside(anchor, size: size, in: screen, gap: gap)
+        let total = anchor.width + gap + size.width
+        guard frame.intersects(anchor), total <= screen.width else { return (anchor, frame) }
+        // The anchor keeps its side of the screen, so it moves as little as possible.
+        let anchorFirst = anchor.midX < screen.midX
+        let start = min(max(anchorFirst ? anchor.minX : anchor.maxX - total, screen.minX), screen.maxX - total)
+        let moved = CGRect(x: anchorFirst ? start : start + size.width + gap, y: anchor.minY,
+                           width: anchor.width, height: anchor.height)
+        let window = beside(moved, size: size, in: screen, gap: gap)
+        return (moved, window)
+    }
 }
 /// Opens on the rising edge of the trigger combination, never while it is held.
 /// Without this the wheel would pop back up instantly after being dragged away,

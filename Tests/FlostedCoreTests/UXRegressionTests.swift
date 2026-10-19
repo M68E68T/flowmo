@@ -106,6 +106,18 @@ final class UXRegressionTests: XCTestCase {
         }
     }
 
+    func testCropFieldsAnnounceTheSizeTheFileGets() throws {
+        let image = try XCTUnwrap(try ImageTools.canvas(960, 600).makeImage())
+        // Seen in the app: fields said 412 × 412, the file had 413 × 413.
+        for selection in [CGRect(x: 0.2147, y: 0.1, width: 0.4291, height: 0.6866),
+                          CGRect(x: 0.333, y: 0.333, width: 0.333, height: 0.333)] {
+            let pixels = try XCTUnwrap(ImageTools.cropPixels(width: 960, height: 600, selection: selection))
+            let cropped = try ImageTools.crop(image, selection: selection)
+            XCTAssertEqual(Int(pixels.width), cropped.width)
+            XCTAssertEqual(Int(pixels.height), cropped.height)
+        }
+    }
+
     func testCorruptImageIsUnreadableInsteadOfAnimated() throws {
         let file = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString + ".png")
         try Data("not an image".utf8).write(to: file)

@@ -56,7 +56,11 @@ struct AnnotationEditor: View {
             VStack(spacing: 0) {
                 ReferenceHeader(title: tr("editor.annotate"), close: cancel).disabled(saving)
                 toolbar.disabled(saving)
+                // The row is always reserved: inserting it on selection shifted
+                // and rescaled the canvas under the pointer, so a click followed
+                // by a drag missed the handle it had just revealed.
                 if let current = selectedAnnotation { propertyBar(current) }
+                else { Color.clear.frame(height: 28).padding(.bottom, 9) }
                 canvasArea.allowsHitTesting(!saving)
                 if source.pageCount > 1 { pageStrip }
                 if hasUnfinished {
@@ -189,7 +193,7 @@ struct AnnotationEditor: View {
                         let ns = NSColor(value).usingColorSpace(.deviceRGB) ?? .orange
                         editSelected(continuous: true) { $0.style.color = RGB(ns.redComponent, ns.greenComponent, ns.blueComponent) }
                     }), supportsOpacity: false)
-                    .labelsHidden().frame(width: 26).help(Text("help.annotationColor"))
+                    .labelsHidden().fixedSize().help(Text("help.annotationColor"))
                 if case .text = annotation.kind {
                     Stepper(value: Binding(get: { annotation.style.fontSize }, set: { value in
                         editSelected { $0.style.fontSize = value }

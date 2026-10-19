@@ -50,7 +50,7 @@ struct ImageEditor: View {
                 ReferenceHeader(title: tr(action == .crop ? "editor.crop" : action == .background ? "editor.background" : "editor.compress"), close: cancel).disabled(saving)
                 ZStack {
                     if action == .crop {
-                        CropCanvas(image: image, selection: $selection, ratio: ratio).padding(22)
+                        CropCanvas(image: image, selection: $selection, ratio: ratio)
                     } else if let preview {
                         Image(nsImage: preview).resizable().interpolation(.high).scaledToFit().padding(action == .background ? 12 : 22)
                     } else { ProgressView().controlSize(.small) }
@@ -90,10 +90,10 @@ struct ImageEditor: View {
             }.help(Text("help.aspectRatio"))
             HStack(spacing:7) {
                 Text("editor.widthShort").font(.system(size:11))
-                TextField("editor.width",value:Binding(get:{ Int(selection.width*Double(image.width)) },set:{ resizeCrop(width:$0,height:nil) }),format:.number)
+                TextField("editor.width",value:Binding(get:{ cropSize.width },set:{ resizeCrop(width:$0,height:nil) }),format:.number)
                     .labelsHidden().textFieldStyle(.plain).padding(.horizontal,7).frame(width:60,height:23).background(.white.opacity(0.7),in:RoundedRectangle(cornerRadius:5))
                 Text("editor.heightShort").font(.system(size:11))
-                TextField("editor.height",value:Binding(get:{ Int(selection.height*Double(image.height)) },set:{ resizeCrop(width:nil,height:$0) }),format:.number)
+                TextField("editor.height",value:Binding(get:{ cropSize.height },set:{ resizeCrop(width:nil,height:$0) }),format:.number)
                     .labelsHidden().textFieldStyle(.plain).padding(.horizontal,7).frame(width:60,height:23).background(.white.opacity(0.7),in:RoundedRectangle(cornerRadius:5))
                 Text("px").font(.system(size:10)).foregroundStyle(.secondary)
                 Spacer()
@@ -156,8 +156,12 @@ struct ImageEditor: View {
             Text("\(Int(Double(image.width) * scale)) × \(Int(Double(image.height) * scale)) px")
                 .font(.system(size: 12, design: .monospaced))
             VStack(alignment: .leading, spacing: 3) {
-                Text(tr("editor.estimatedSize", ByteCountFormatter.string(fromByteCount: Int64(compressedBytes), countStyle: .file)))
-                    .font(.subheadline)
+                // An unreachable limit leaves the last estimate behind; showing it
+                // next to the error would describe a file that cannot be saved.
+                if previewError == nil {
+                    Text(tr("editor.estimatedSize", ByteCountFormatter.string(fromByteCount: Int64(compressedBytes), countStyle: .file)))
+                        .font(.subheadline)
+                }
                 if let previewError {
                     Text(previewError).font(.system(size: 10)).foregroundStyle(accent)
                         .fixedSize(horizontal: false, vertical: true)
@@ -262,6 +266,10 @@ struct ImageEditor: View {
             else { errorMessage = error.localizedDescription }
         }
     }
+    private var cropSize: (width: Int, height: Int) {
+        let pixels = ImageTools.cropPixels(width: image.width, height: image.height, selection: selection) ?? .zero
+        return (Int(pixels.width), Int(pixels.height))
+    }
     private func save() {
         guard !saving else { return }; saving = true
         let source = image, selected = selection, currentStyle = style, q = quality, s = scale, limit = JPEGCompression.byteLimit(kilobytes: targetKB), tool = action, input = file, backdropImage=backdrop
@@ -307,13 +315,19 @@ final class CropSelectionView: NSView {
         case create(CGPoint)
     }
     private var gesture: Gesture?
+    /// The margin belongs to this view, not to SwiftUI padding: the grips
+    /// protrude past the image, and outside this view a press on their outer
+    /// half moved the whole window instead of the crop edge.
+    static let margin: CGFloat = 22
     private var imageRect: CGRect {
         guard let image else { return .zero }
-        let factor = min(bounds.width / Double(image.width), bounds.height / Double(image.height))
+        let inner = bounds.insetBy(dx: Self.margin, dy: Self.margin)
+        let factor = min(inner.width / Double(image.width), inner.height / Double(image.height))
         let size = CGSize(width: Double(image.width) * factor, height: Double(image.height) * factor)
         return CGRect(x: bounds.midX-size.width/2, y: bounds.midY-size.height/2, width: size.width, height: size.height)
     }
     override func resetCursorRects() { addCursorRect(bounds, cursor: .crosshair) }
+    override var mouseDownCanMoveWindow: Bool { false }
     private var cropRect: CGRect {
         let area = imageRect
         return CGRect(x: area.minX + selection.minX * area.width, y: area.minY + selection.minY * area.height,

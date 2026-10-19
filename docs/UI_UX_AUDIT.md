@@ -16,25 +16,49 @@ Insgesamt sind **13 priorisierte Befunde** dokumentiert. Davon ist die fehlende 
 
 ## Behebungsstand (Nachtrag 19.10.2026)
 
-Nach dem Audit wurden alle 13 Befunde im Code behoben. Release-Build ohne Warnung; **70 Tests ohne Fehler**, darunter `UXRegressionTests` (Core) und `CanvasBehaviorTests` (neues Target `FlostedAppTests`, AppKit-Views offscreen mit synthetischen Ereignissen). „Offen“ bedeutet: noch keine praktische Mausabnahme in der laufenden App.
+Nach dem Audit wurden alle 13 Befunde im Code behoben. Release-Build ohne Warnung; **76 Tests ohne Fehler**, darunter `UXRegressionTests` (Core) und `CanvasBehaviorTests` (neues Target `FlostedAppTests`, AppKit-Views offscreen mit synthetischen Ereignissen). Die Spalte „Nachweis“ nennt das Ergebnis der Praxisabnahme vom 19.10.2026 (siehe unten).
 
 | Befund | Behebung | Nachweis |
 | --- | --- | --- |
-| F01 | Eigenes Text-Sheet mit eigenem Entwurf; `AnnotationEdits.text` stellt beim Abbrechen den übernommenen Stand wieder her | Test; GUI offen |
-| F02 | `selectionChanged`-Callback vom Canvas zurück an das Binding; Eigenschaftsleiste übernimmt Stil der Auswahl | Test; GUI offen |
-| F03 | Bearbeiten-Menü (Responder-Kette); `ReferenceWindow.performKeyEquivalent` leitet ⌘Z/⇧⌘Z/⌘0/⌘+/⌘− an den aktiven Editor, nicht bei Textfeld oder Sheet | Test; GUI offen |
-| F04 | Umschalter erscheint, sobald es für die Auswahl Werkzeuge gibt (auch PDF) | GUI offen |
-| F05 | Glasfläche des Rads bei leerem Aktionskatalog ausgeblendet; Drop-Ziel bleibt | Test; GUI offen |
-| F06 | `WheelIllustration`: gleicher Zeichner, ohne Tracking, Drop-Typen und Accessibility-Buttons | Test; GUI offen |
-| F07 | `CropGeometry`: Griffe vor Innenfläche, Verschieben, Gegenecke, Seitenverhältnis, Grenzen | Test; GUI offen |
-| F08 | Text-/Signaturrahmen gelangen erst nach erfolgreichem Dialog in den Verlauf; `commitIfChanged` | Test; GUI offen |
-| F09 | `AnnotationRenderer.draw(logicalSize:)` skaliert Vorschau inkl. Schrift und Linien aus dem Quellraum | Test; GUI offen |
-| F10 | `DashboardLayout.size` (420 × 550) an Fenster und Root-View; Hinweis umbricht | GUI offen |
+| F01 | Eigenes Text-Sheet mit eigenem Entwurf; `AnnotationEdits.text` stellt beim Abbrechen den übernommenen Stand wieder her | Test; GUI bestanden (Doppelklick → Abbrechen, Text bleibt) |
+| F02 | `selectionChanged`-Callback vom Canvas zurück an das Binding; Eigenschaftsleiste übernimmt Stil der Auswahl | Test; GUI bestanden (Leiste erscheint, Drehung wirkt, ein ⌘Z nimmt sie ganz zurück) |
+| F03 | Bearbeiten-Menü (Responder-Kette); `ReferenceWindow.performKeyEquivalent` leitet ⌘Z/⇧⌘Z/⌘0/⌘+/⌘− an den aktiven Editor, nicht bei Textfeld oder Sheet | Test; GUI bestanden (⌘Z/⇧⌘Z/⌘0/⌘+ im Editor; ⌘A/⌘V/⌘Z im Textdialog, ohne den Editor-Verlauf zu berühren) |
+| F04 | Umschalter erscheint, sobald es für die Auswahl Werkzeuge gibt (auch PDF) | GUI bestanden |
+| F05 | Glasfläche des Rads bei leerem Aktionskatalog ausgeblendet; Drop-Ziel bleibt | Test; GUI bestanden |
+| F06 | `WheelIllustration`: gleicher Zeichner, ohne Tracking, Drop-Typen und Accessibility-Buttons | Test; GUI bestanden (Hover und Klick ohne Wirkung) |
+| F07 | `CropGeometry`: Griffe vor Innenfläche, Verschieben, Gegenecke, Seitenverhältnis, Grenzen | Test; GUI bestanden nach Nachbesserung N7 (Ecke, Fläche, 1:1, Export) |
+| F08 | Text-/Signaturrahmen gelangen erst nach erfolgreichem Dialog in den Verlauf; `commitIfChanged` | Test; GUI bestanden |
+| F09 | `AnnotationRenderer.draw(logicalSize:)` skaliert Vorschau inkl. Schrift und Linien aus dem Quellraum | Test; GUI bestanden (Strichstärke wächst mit Zoom, Export entspricht Vorschau) |
+| F10 | `DashboardLayout.size` (420 × 550) an Fenster und Root-View; Hinweis umbricht | GUI bestanden (420 × 550, Hinweis vollständig) |
 | F11 | 0 Bilder → `unreadable` | Test |
-| F12 | `JPEGCompression.encode` gemeinsam für Vorschau und Speichern; wirksame Qualität angezeigt | Test; GUI offen |
-| F13 | `arrowReversed` und geordnete `arrowHandles`; Neuanlage übernimmt Zugrichtung | Test; GUI offen |
+| F12 | `JPEGCompression.encode` gemeinsam für Vorschau und Speichern; wirksame Qualität angezeigt | Test; GUI bestanden (20 KB → Schätzung 20 KB, wirksame Qualität 37 %, Datei 19.972 Bytes) |
+| F13 | `arrowReversed` und geordnete `arrowHandles`; Neuanlage übernimmt Zugrichtung | Test; GUI bestanden nach Nachbesserung N1/N6 (rechts unten → links oben, Spitzengriff) |
 
 Aus den weiteren Risiken ebenfalls umgesetzt: `PageDragSource` räumt den Drag-Zustand bei jedem Ende auf und stellt die Reihenfolge bei Abbruch wieder her; Import und Miniaturen blockieren den Hauptthread nicht mehr; Eingaben sind während Speichern/Import gesperrt; Fenster werden neben dem aktiven Fenster platziert und geschlossene Controller freigegeben; leerer Werkzeug-Zusatz wird in den Einstellungen erklärt.
+
+### Praxisabnahme in der laufenden App (19.10.2026)
+
+Bedient wurde die reguläre App `dist/Flosted.app` mit echter Maus und Tastatur (CGEvent) sowie über Bedienungshilfen; Belege per Bildschirmfoto. Testdateien lagen in einem temporären Ordner; das Original blieb bytegleich, keine Nutzerdateien wurden berührt. Dabei fielen folgende neue Fehler auf, alle behoben und erneut geprüft:
+
+| Nr. | Fehler | Ursache und Behebung |
+| --- | --- | --- |
+| N1 | **Zeichnen verschob das Fenster.** Jeder Strich auf Zeichen- oder Zuschnittfläche bewegte das Editorfenster um die Zuglänge, teils halb aus dem Bildschirm; Rahmen wurden dadurch verzerrt. | Fenster sind am Hintergrund verschiebbar, transparente Views zählen als Hintergrund. `mouseDownCanMoveWindow = false` für Canvas, Zuschnitt und Seitenminiaturen. Test. |
+| N2 | Editor öffnete in Mindestgröße 720 × 560 statt 1000 × 780. | Hosting-Controller übernimmt vorläufige Größe; `place` stellt jetzt `ReferenceWindow.preferredSize` her. |
+| N3 | Neue Fenster überdeckten das Hauptfenster bzw. ragten aus dem Bildschirm (Zuschnitt bei x = 1154 auf 1440-pt-Display). | `place` rechnete mit der vorläufigen Größe, `NSWindowController` versetzte zusätzlich (Cascading). Größe vor dem Platzieren, `shouldCascadeWindows = false`, `WindowPlacement.pair` schiebt das Hauptfenster seitlich, wenn beide nebeneinander passen. Tests. |
+| N4 | Auswahl eines Elements ließ die Zeichenfläche springen und schrumpfen; Klick + Ziehen verfehlte den gerade erschienenen Griff und hob die Auswahl auf. | Zeile der Eigenschaftsleiste ist immer reserviert. |
+| N5 | Zuschnittgriffe am Bildrand: äußere Griffhälfte lag außerhalb der View und verschob das Fenster. | Rand gehört jetzt zur `CropSelectionView`. Test. |
+| N6 | Hilfetext „Pfeil … von unten links nach oben rechts“ seit F13 falsch. | Text in beiden Sprachen angepasst. |
+| N7 | Größenfelder zeigten 412 × 412, Datei hatte 413 × 413. | Felder nutzen `ImageTools.cropPixels`, dieselbe Rechnung wie der Export. Test. |
+| N8 | Farbfeld in der Eigenschaftsleiste abgeschnitten (feste 26 pt, Control 48 pt). | Eigene Größe. |
+| N9 | „Bearbeiten“ im Rad kleiner als „Seiten“. | Bis vier Sektoren volle Schriftgröße. |
+| N10 | DOCX-Hinweis auch im Werkzeugmodus. | Nur noch bei Formaten. |
+| N11 | Bei unerreichbarem Größenlimit stand neben der Fehlermeldung die alte Schätzung. | Schätzung wird dann ausgeblendet. |
+
+Weitere Ergebnisse: Seitenverwaltung – Ziehen sortiert live um, Escape vor dem Loslassen stellt die Reihenfolge wieder her. Finder-Drag mit ⇧ öffnet das schwebende Rad, Loslassen auf JPG erzeugt die Datei (960 × 600), Escape vor dem Loslassen erzeugt keine Datei (3/3). Nur wenn während des Drags ein Bildschirmfoto aufgenommen wurde, wirkte Escape nicht und das Loslassen wurde als normaler Drop verarbeitet (2/2) – sehr wahrscheinlich ein Messartefakt; vor dem Loslassen entstand in keinem Lauf eine Datei.
+
+Bewusst offen bzw. nur beobachtet:
+- Schriftgröße neuer Texte gilt seit F09 in Bildpixeln. Auf großen Fotos ist der Standard (14) dadurch sehr klein – Vorschau und Export stimmen aber überein. Ein bildabhängiger Standard wäre eine Designentscheidung.
+- Nicht geprüft: Signatur zeichnen/wiederverwenden, Hintergrund-Werkzeug, mehrere Bildschirme, große Dateien, Schließen während des Speicherns, Einstellungen.
 
 ## Prüfbasis und Methode
 

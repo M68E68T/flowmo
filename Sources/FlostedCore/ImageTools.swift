@@ -20,12 +20,18 @@ public struct BackgroundStyle: Sendable {
 public enum ImageTools {
     /// Selection is normalized in bottom-left view coordinates.
     public static func crop(_ image: CGImage, selection: CGRect) throws -> CGImage {
+        guard let pixels = cropPixels(width: image.width, height: image.height, selection: selection),
+              let result = image.cropping(to: pixels) else { throw ConversionError.encoding }
+        return result
+    }
+    /// The exact pixel rectangle `crop` cuts. The size fields show this too,
+    /// so they never announce a different size than the saved file has.
+    public static func cropPixels(width: Int, height: Int, selection: CGRect) -> CGRect? {
         let normalized = selection.standardized.intersection(CGRect(x: 0, y: 0, width: 1, height: 1))
-        guard !normalized.isNull, normalized.width > 0, normalized.height > 0 else { throw ConversionError.encoding }
-        let pixels = CGRect(x: normalized.minX * Double(image.width), y: (1 - normalized.maxY) * Double(image.height),
-            width: normalized.width * Double(image.width), height: normalized.height * Double(image.height)).integral
-            .intersection(CGRect(x: 0, y: 0, width: image.width, height: image.height))
-        guard let result = image.cropping(to: pixels) else { throw ConversionError.encoding }; return result
+        guard !normalized.isNull, normalized.width > 0, normalized.height > 0 else { return nil }
+        return CGRect(x: normalized.minX * Double(width), y: (1 - normalized.maxY) * Double(height),
+            width: normalized.width * Double(width), height: normalized.height * Double(height)).integral
+            .intersection(CGRect(x: 0, y: 0, width: width, height: height))
     }
     public static func resize(_ image: CGImage, scale: Double) throws -> CGImage {
         let factor = min(1, max(0.01, scale))

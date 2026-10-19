@@ -29,6 +29,7 @@ struct PageDragSource: NSViewRepresentable {
         var ended: ((Bool) -> Void)?
         private var start: CGPoint?
         private var dragging = false
+        override var mouseDownCanMoveWindow: Bool { false }
         override func mouseDown(with event: NSEvent) { start = convert(event.locationInWindow, from: nil) }
         override func mouseDragged(with event: NSEvent) {
             guard !dragging, let start else { return }

@@ -4,7 +4,7 @@ Datum: 18.10.2026. Apple-Silicon-Mac, Swift 6.3.2, Sprachmodus Swift 5.
 
 ## Automatisch erfolgreich
 - Release-Build inklusive startbarem .app-Bundle, keine Compiler-Warnungen.
-- Siebzig XCTest-Fälle, null Fehler (Stand 19.10.2026, siehe unten).
+- 76 XCTest-Fälle, null Fehler (Stand 19.10.2026, siehe unten).
 - PNG/JPG/TIFF-Ausgaben werden erneut als Bilder gelesen, mit korrekten Abmessungen.
 - Originalbytes unverändert; Namenskollisionen erzeugen getrennte neue Dateien.
 - Ungültiger Bildeingang erzeugt keine Ausgabe.
@@ -304,4 +304,15 @@ Dateizugriffsgrenzen blieben aktiv. Das lokale Bundle ist nur ad hoc signiert.
 - Die Nutzerinstanz wurde regulär beendet und aus `dist/Flosted.app` neu gestartet.
   Die Sichtprüfung am Bildschirm ist offen: Screenshots waren ohne
   Bildschirmaufnahme-Berechtigung nicht möglich, Systemeinstellungen wurden nicht verändert.
+
+## Praxisabnahme der UI-Korrekturen vom 19.10.2026
+
+- Alle 13 Audit-Befunde in der laufenden App mit echter Maus/Tastatur geprüft und
+  bestanden, inklusive Finder-Drag mit ⇧ auf das schwebende Rad und Escape.
+- Dabei 11 neue Fehler gefunden und behoben (N1–N11 in `docs/UI_UX_AUDIT.md`),
+  am wichtigsten: Zeichnen verschob das Fenster; neue Fenster überdeckten das
+  Hauptfenster oder ragten aus dem Bildschirm.
+- 76 Tests, 0 Fehler; Release-Build ohne Warnung. Original-Testbild bytegleich.
+- Offen: Signatur, Hintergrund-Werkzeug, Einstellungen, mehrere Bildschirme,
+  große Dateien, Schließen während des Speicherns.
 

@@ -151,7 +151,9 @@ final class RadialMenuView: NSView {
             let angle = (90 - Double(index) * step) * .pi / 180
             let r = (outer + inner) / 2
             let point = CGPoint(x: center.x + cos(angle) * r, y: center.y + sin(angle) * r)
-            let fontSize: CGFloat = action.title.count > 9 ? 10 : (action.title.count > 6 ? 11 : 14)
+            // Wide sectors (up to four) fit full-size words; the steps are for six.
+            let fontSize: CGFloat = actions.count <= 4 && action.title.count <= 12 ? 14
+                : (action.title.count > 9 ? 10 : (action.title.count > 6 ? 11 : 14))
             drawText(action.title, at: point, font: .systemFont(ofSize: fontSize, weight: .semibold), color: hot ? .white : .black)
         }
         let r = inner - 6

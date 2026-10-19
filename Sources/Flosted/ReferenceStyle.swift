@@ -96,12 +96,16 @@ struct ReferenceActionButton: ButtonStyle {
 
 final class ReferenceWindow: NSWindow {
     let dimensions: WindowDimensions
+    /// The size asked for at creation. `dimensions` follows every resize,
+    /// including the hosting controller's provisional one.
+    let preferredSize: CGSize
     var editorCommands: EditorWindowCommands?
     private var resizeObserver: NSObjectProtocol?
     override var canBecomeKey: Bool { true }
     override var canBecomeMain: Bool { true }
     init(size: CGSize, title: String, resizable: Bool = false) {
         dimensions = WindowDimensions(size)
+        preferredSize = size
         var mask: NSWindow.StyleMask = [.borderless]
         if resizable { mask.insert(.resizable) }
         super.init(contentRect: CGRect(origin: .zero, size: size), styleMask: mask, backing: .buffered, defer: false)

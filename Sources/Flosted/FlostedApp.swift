@@ -160,13 +160,19 @@ final class AppController: NSObject, NSApplicationDelegate, ObservableObject {
     /// windows would otherwise show through each other.
     private func place(_ window: NSWindow?) {
         guard let window else { return }
+        // Assigning a hosting controller leaves a provisional size that only
+        // grows to the real one after layout. Placing that would let the
+        // grown window spill past the screen edge or onto its neighbour.
+        if let reference = window as? ReferenceWindow { window.setContentSize(reference.preferredSize) }
         let candidates = [NSApp.keyWindow, mainWindow, settingsWindow, introWindow]
             + editors.reversed().map(\.window)
         guard let anchor = candidates.compactMap({ $0 }).first(where: { $0 !== window && $0.isVisible }) else {
             window.center(); return
         }
         let area = (anchor.screen ?? NSScreen.main)?.visibleFrame ?? anchor.frame
-        window.setFrame(WindowPlacement.beside(anchor.frame, size: window.frame.size, in: area), display: false)
+        let placed = WindowPlacement.pair(anchor.frame, size: window.frame.size, in: area)
+        if placed.anchor != anchor.frame { anchor.setFrame(placed.anchor, display: true, animate: true) }
+        window.setFrame(placed.window, display: false)
     }
     @objc private func quit() { NSApp.terminate(nil) }
     private func updateMenu() {
@@ -303,7 +309,8 @@ final class AppController: NSObject, NSApplicationDelegate, ObservableObject {
         let hosting = NSHostingController(rootView: WindowSizedRoot(dimensions: window.dimensions, content: editor))
         hosting.sizingOptions = []
         window.contentViewController = hosting
-        let owner = NSWindowController(window: window); editors.append(owner)
+        // Cascading would move the window again after `place` and undo it.
+        let owner = NSWindowController(window: window); owner.shouldCascadeWindows = false; editors.append(owner)
         place(window)
         owner.showWindow(nil); window.makeKeyAndOrderFront(nil); NSApp.activate(ignoringOtherApps: true)
         status = tr("status.opened", tr("editor.annotate"))
@@ -315,7 +322,7 @@ final class AppController: NSObject, NSApplicationDelegate, ObservableObject {
             NSWorkspace.shared.activateFileViewerSelecting([output])
         }, cancel: { [weak window] in window?.close() })
         window.contentViewController = NSHostingController(rootView: manager)
-        let owner = NSWindowController(window: window); editors.append(owner)
+        let owner = NSWindowController(window: window); owner.shouldCascadeWindows = false; editors.append(owner)
         place(window)
         owner.showWindow(nil); window.makeKeyAndOrderFront(nil); NSApp.activate(ignoringOtherApps: true)
         status = tr("status.opened", tr("pages.title"))
@@ -328,7 +335,7 @@ final class AppController: NSObject, NSApplicationDelegate, ObservableObject {
             NSWorkspace.shared.activateFileViewerSelecting([output])
         }, cancel: { [weak window] in window?.close() })
         window.contentViewController = NSHostingController(rootView: editor)
-        let owner = NSWindowController(window: window); editors.append(owner)
+        let owner = NSWindowController(window: window); owner.shouldCascadeWindows = false; editors.append(owner)
         place(window)
         owner.showWindow(nil); window.makeKeyAndOrderFront(nil); NSApp.activate(ignoringOtherApps: true)
         status = tr("status.opened", title)
@@ -386,7 +393,7 @@ struct Dashboard: View {
                     Text(controller.selection.count == 1 ? first.lastPathComponent : tr("dashboard.fileCount", controller.selection.count))
                         .font(.system(size:10)).lineLimit(1).foregroundStyle(.secondary).padding(.horizontal,18)
                 }
-                if controller.selection.first.map(FileKind.detect) == .pdf {
+                if !controller.tools, controller.selection.first.map(FileKind.detect) == .pdf {
                     Text("dashboard.docxNote")
                         .font(.system(size: 10)).foregroundStyle(.secondary)
                         .fixedSize(horizontal: false, vertical: true).padding(.horizontal, 18)

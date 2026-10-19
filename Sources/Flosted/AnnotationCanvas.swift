@@ -62,6 +62,9 @@ final class AnnotationCanvasView: NSView {
     private let handle: CGFloat = 9
 
     override var acceptsFirstResponder: Bool { true }
+    // The window moves by its background, and a transparent view counts as
+    // background: every stroke would also drag the window along.
+    override var mouseDownCanMoveWindow: Bool { false }
     override func resetCursorRects() {
         addCursorRect(bounds, cursor: tool == .select ? .arrow : .crosshair)
     }

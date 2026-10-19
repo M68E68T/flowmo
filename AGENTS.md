@@ -39,6 +39,13 @@ Do not introduce dark dashboards, oversized headings or side-by-side editor layo
   alphaValue in GlobalDragController, not on SwiftUI .opacity, so the wheel keeps
   working as a drop target at low opacity. Windows never set alphaValue: letting
   them show through each other only cost readability. Do not reintroduce it.
+- ReferenceWindow is movable by its background, and AppKit treats every
+  transparent view as background. Any view that handles drags (canvas, crop,
+  page thumbnails) must return mouseDownCanMoveWindow = false, or each stroke
+  also moves the window.
+- place() restores ReferenceWindow.preferredSize before positioning: right after
+  contentViewController is set the window has a provisional size. Window
+  controllers set shouldCascadeWindows = false, or AppKit moves them again.
 - Every SwiftUI root view hosted in a window needs an explicit .frame(width:height:)
   matching the window, see ImageEditor.swift. AppKit otherwise adopts the hosting
   controller's intrinsic size and shrinks the window.
@@ -114,7 +121,7 @@ Build: bash scripts/build-app.sh
 Test: swift test --cache-path .build/cache --config-path .build/config --security-path .build/security
 Restricted execution may need --disable-sandbox for SwiftPM's nested sandbox.
 Run: dist/Flosted.app (or bash Starten.command).
-Seventy tests cover processing, collision safety, PDF/DOCX, menu models,
+Seventy-six tests cover processing, collision safety, PDF/DOCX, menu models,
 modifier combinations, preference persistence and the UX regressions from
 docs/UI_UX_AUDIT.md. FlostedAppTests drives AppKit views offscreen with synthetic
 events; it never posts events to the user's desktop.

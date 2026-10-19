@@ -153,7 +153,7 @@
 "help.tool.select" = "Click and move existing elements.";
 "help.tool.text" = "Drag a box and type your text.";
 "help.tool.signature" = "Place a signature. The drawing window opens the first time.";
-"help.tool.arrow" = "Drag an arrow, from bottom left to top right.";
+"help.tool.arrow" = "Drag an arrow. The tip ends where you release.";
 "help.tool.rectangle" = "Draw a box to mark something.";
 "help.tool.highlight" = "Tint a passage; the text underneath stays readable.";
 "help.tool.redaction" = "Permanently obscure a spot. The text is really removed, not just covered.";
