@@ -107,8 +107,8 @@ private struct ActionButtonBody: View {
     @Environment(\.isEnabled) private var isEnabled
     @State private var hovering = false
     private var fill: Color {
-        if primary { return ReferenceStyle.accent.opacity(configuration.isPressed ? 0.75 : (hovering ? 0.9 : 1)) }
-        return Color.black.opacity(configuration.isPressed ? 0.12 : (hovering ? 0.09 : 0.065))
+        if primary { return ReferenceStyle.accent.opacity(configuration.isPressed ? 0.72 : (hovering ? 0.86 : 1)) }
+        return Color.black.opacity(configuration.isPressed ? 0.15 : (hovering ? 0.11 : 0.065))
     }
     var body: some View {
         configuration.label.font(.system(size: 11, weight: primary ? .semibold : .regular))
@@ -116,7 +116,7 @@ private struct ActionButtonBody: View {
             .foregroundStyle(primary ? Color.white : ReferenceStyle.ink)
             .background(fill, in: RoundedRectangle(cornerRadius: 5))
             .overlay(RoundedRectangle(cornerRadius: 5).strokeBorder(primary ? Color.black.opacity(0.13) : .clear, lineWidth: 0.5))
-            .scaleEffect(configuration.isPressed ? 0.97 : 1)
+            .scaleEffect(configuration.isPressed ? 0.96 : 1)
             .opacity(isEnabled ? 1 : 0.45)
             .onHover { hovering = $0 && isEnabled }
             .motion(Motion.quick, value: hovering)
@@ -138,7 +138,7 @@ private struct IconButtonBody: View {
     var body: some View {
         configuration.label
             .frame(width: 22, height: 22)
-            .background(.black.opacity(configuration.isPressed ? 0.13 : (hovering ? 0.09 : 0.055)), in: Circle())
+            .background(.black.opacity(configuration.isPressed ? 0.16 : (hovering ? 0.11 : 0.055)), in: Circle())
             .contentShape(Circle())
             .scaleEffect(configuration.isPressed ? 0.92 : 1)
             .onHover { hovering = $0 }
