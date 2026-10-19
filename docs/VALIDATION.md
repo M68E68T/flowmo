@@ -40,7 +40,7 @@ Datum: 18.10.2026. Apple-Silicon-Mac, Swift 6.3.2, Sprachmodus Swift 5.
   Ergebnis zurück, und erkennt Text auf einer Seite, die ihn nur als Bild
   trägt. Auf diesem Mac sind PNG, JPG, HEIC, TIFF, BMP und AVIF als Encoder
   vorhanden; WebP kann macOS nur lesen, nicht schreiben.
-- Zusätzlich einmalig gegen echte Dateien in ~/Documents/FLowmo-Abnahme
+- Zusätzlich einmalig gegen echte Dateien in ~/Documents/flowmo-Abnahme
   gefahren (Vertrag.pdf mit ALPHA/BETA/GAMMA, Foto.png, Gross.jpg, Scan.pdf):
   Schwärzen entfernte BETA und ließ ALPHA und GAMMA stehen, Annotieren erhielt
   die Textebene, Seiten ließen sich umsortieren/drehen/löschen, das
@@ -134,7 +134,7 @@ Datum: 18.10.2026. Apple-Silicon-Mac, Swift 6.3.2, Sprachmodus Swift 5.
   Durchscheinen nur die Lesbarkeit gekostet hat.
 
 ## Kurzer manueller Abnahmetest
-1. dist/FLowmo.app öffnen. Die Finder-Erkennung läuft ab dem Start.
+1. dist/flowmo.app öffnen. Die Finder-Erkennung läuft ab dem Start.
 2. PNG im Finder ziehen, Shift drücken, auf JPG ziehen und loslassen.
 3. Neue Datei neben Original öffnen; Original darf sich nicht ändern.
 4. Wiederholen: bestehende Ausgabe bleibt erhalten, neue erhält Nummer im Namen.
@@ -207,7 +207,7 @@ Datum: 18.10.2026. Apple-Silicon-Mac, Swift 6.3.2, Sprachmodus Swift 5.
     hintergrund verschwindet, die Striche bleiben.
 25. Eine Stelle schwärzen, speichern, Ergebnis öffnen: dort darf kein Text mehr
     markierbar sein und die PDF-Suche darf das Wort nicht finden.
-26. `defaults delete dev.flowmo.prototype FLowmoIntroSeen`, App starten:
+26. `defaults delete dev.flowmo.prototype flowmoIntroSeen`, App starten:
     Einleitung erscheint neben dem Hauptfenster. Durchklicken, auf Karte 2 und 3
     ist das echte Rad zu sehen. „Beispiel laden" schließt sie und legt die Datei
     im Hauptfenster bereit.
@@ -264,7 +264,7 @@ Dateizugriffsgrenzen blieben aktiv. Das lokale Bundle ist nur ad hoc signiert.
 - Release-Build erfolgreich; alle 54 bestehenden Tests bestehen auch nach
   der abschließenden Korrektur der Schatten-Skalierung.
 - Zehn PNG-Repräsentationen von 16 bis 1024 Pixeln mit korrekten Abmessungen
-  erzeugt und als `FLowmo.icns` im Bundle hinterlegt. `CFBundleIconFile`
+  erzeugt und als `flowmo.icns` im Bundle hinterlegt. `CFBundleIconFile`
   verweist darauf; die finale Ad-hoc-Signatur besteht die strenge Prüfung.
 - App-Icon im Finder visuell bestätigt. Größenvergleich für 128, 64, 32 und
   16 Pixel sowie Willkommenszeichen und 18-/36-Pixel-Template auf hellen und
@@ -280,7 +280,7 @@ Dateizugriffsgrenzen blieben aktiv. Das lokale Bundle ist nur ad hoc signiert.
 ## Korrektur des Dock-Symbols vom 19.10.2026
 
 - Doppelten `CFBundleIconFile`-Eintrag entfernt; der verbleibende verweist
-  eindeutig auf `FLowmo.icns`. Beim Start setzt die App ihr Symbol ausdrücklich
+  eindeutig auf `flowmo.icns`. Beim Start setzt die App ihr Symbol ausdrücklich
   aus derselben `BrandMark`-Zeichenquelle wie das gebündelte Icon.
 - Der Build liest den Icon-Dateinamen aus der Plist und dekodiert sowohl die
   Quelldatei als auch die fertige Bundle-Datei. Fehlendes und beschädigtes Icon
@@ -288,7 +288,7 @@ Dateizugriffsgrenzen blieben aktiv. Das lokale Bundle ist nur ad hoc signiert.
 - Release-Build, alle 54 bestehenden Tests, Plist-Prüfung und strenge
   Ad-hoc-Signaturprüfung erfolgreich.
 - Nur das leere Hauptfenster war offen. Die Nutzerinstanz regulär beendet und
-  aus `dist/FLowmo.app` neu gestartet; das von `NSRunningApplication.icon`
+  aus `dist/flowmo.app` neu gestartet; das von `NSRunningApplication.icon`
   gelieferte Bild zeigt das orange-weiße Logo. Die direkte Sichtprüfung im Dock
   und App-Umschalter bleibt offen: Der Fernsteuerungszugriff auf das Dock lief
   in ein Timeout. Es wurden keine Dock-Einstellungen oder System-Caches verändert.
@@ -299,9 +299,9 @@ Dateizugriffsgrenzen blieben aktiv. Das lokale Bundle ist nur ad hoc signiert.
   stehen dort im Abschnitt „Behebungsstand“.
 - Release-Build mit Sprach-Lint und Signatur erfolgreich, ohne Compiler-Warnung.
 - 70 Tests, 0 Fehler. Neu: `UXRegressionTests` (Core, 7 Tests) und das Target
-  `FLowmoAppTests` mit `CanvasBehaviorTests` (7 Tests, AppKit-Views offscreen
+  `FlowmoAppTests` mit `CanvasBehaviorTests` (7 Tests, AppKit-Views offscreen
   mit synthetischen Ereignissen).
-- Die Nutzerinstanz wurde regulär beendet und aus `dist/FLowmo.app` neu gestartet.
+- Die Nutzerinstanz wurde regulär beendet und aus `dist/flowmo.app` neu gestartet.
   Die Sichtprüfung am Bildschirm ist offen: Screenshots waren ohne
   Bildschirmaufnahme-Berechtigung nicht möglich, Systemeinstellungen wurden nicht verändert.
 
@@ -338,7 +338,7 @@ Dateizugriffsgrenzen blieben aktiv. Das lokale Bundle ist nur ad hoc signiert.
   Seite wieder aus. Die Quelldatei auf dem Schreibtisch blieb bytegleich;
   vorhandene Nutzer-Ausgaben wurden nicht überschrieben.
 - Die laufende Nutzerinstanz wurde nicht neu gestartet. Für den erneuten
-  Finder-Drag muss die frisch gebaute App aus `dist/FLowmo.app` gestartet werden.
+  Finder-Drag muss die frisch gebaute App aus `dist/flowmo.app` gestartet werden.
 
 ## Fortlaufende Textbearbeitung vom 19.10.2026
 
@@ -391,12 +391,12 @@ Dateizugriffsgrenzen blieben aktiv. Das lokale Bundle ist nur ad hoc signiert.
 
 
 
-## Umbenennung in FLowmo vom 19.10.2026
+## Umbenennung in flowmo vom 19.10.2026
 
 - Oberfläche in Deutsch und Englisch, App-Bundle und ausführbare Datei,
   Bundle-ID, Swift-Module, Test-Targets, Icon-Dateiname, Start-/Build-/Paket-
-  skripte, Editor-Aufgaben und Dokumentation verwenden FLowmo.
-- Neue Einstellungen und der Einleitungsstatus verwenden FLowmo-Schlüssel.
+  skripte, Editor-Aufgaben und Dokumentation verwenden flowmo.
+- Neue Einstellungen und der Einleitungsstatus verwenden flowmo-Schlüssel.
   Frühere Namen bleiben ausschließlich für die Übernahme vorhandener Daten
   lesbar; aktuelle Einstellungen haben Vorrang. Ein zurückgesetzter
   Einleitungsstatus wird durch die Übernahme nicht erneut überschrieben.
@@ -406,8 +406,8 @@ Dateizugriffsgrenzen blieben aktiv. Das lokale Bundle ist nur ad hoc signiert.
 - Vollständiger Testlauf: **106 Tests, 0 Fehler**, einschließlich vier neuer
   Prüfungen zur Datenübernahme.
 - Release-Build, Sprach-/Plist-Prüfung und strenge Ad-hoc-Signaturprüfung
-  erfolgreich. Das Paket `dist/FLowmo-0.4.0.zip` enthält das neue App-Bundle.
+  erfolgreich. Das Paket `dist/flowmo-0.5.0.zip` enthält das neue App-Bundle.
 - Reguläre bisherige Instanz ohne offene Editoren beendet; neue App gestartet.
   Fenstername, sichtbarer App-Name, Formatmenü und App-Menü einschließlich
-  „FLowmo beenden“ über die laufende Oberfläche geprüft.
+  „flowmo beenden“ über die laufende Oberfläche geprüft.
 - Bisherige App-/ZIP-Builds liegen als Sicherung ausschließlich unter `.build`.

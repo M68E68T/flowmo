@@ -6,9 +6,9 @@ cd "$PROJECT_ROOT"
 # Friends may have Intel Macs: packages are universal unless told otherwise.
 if [ "$#" -eq 0 ]; then set -- --arch arm64 --arch x86_64; fi
 bash "$PROJECT_ROOT/scripts/build-app.sh" "$@"
-APP_PATH="$PROJECT_ROOT/dist/FLowmo.app"
+APP_PATH="$PROJECT_ROOT/dist/flowmo.app"
 VERSION="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "$APP_PATH/Contents/Info.plist")"
-ZIP_PATH="$PROJECT_ROOT/dist/FLowmo-$VERSION.zip"
+ZIP_PATH="$PROJECT_ROOT/dist/flowmo-$VERSION.zip"
 rm -f "$ZIP_PATH"
 # ditto, not zip: it preserves the bundle structure and the code signature,
 # which a plain zip quietly destroys.

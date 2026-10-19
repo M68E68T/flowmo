@@ -1,7 +1,7 @@
 /* Menüleiste und Hauptmenü */
-"menu.open" = "FLowmo öffnen";
+"menu.open" = "flowmo öffnen";
 "menu.settings" = "Einstellungen …";
-"menu.quit" = "FLowmo beenden";
+"menu.quit" = "flowmo beenden";
 "menu.file" = "Datei";
 "menu.chooseFiles" = "Dateien auswählen …";
 
@@ -32,7 +32,7 @@
 "status.unsupportedDrag" = "Bitte Bilder, PDFs oder Textdokumente desselben Typs ziehen.";
 "status.noTools" = "Für diese Auswahl sind keine Bildwerkzeuge verfügbar.";
 "status.menuOpen" = "Kreis-Menü geöffnet · %d Datei(en)";
-"status.convertedWithErrors" = "Konvertierung mit Fehlern · FLowmo öffnen";
+"status.convertedWithErrors" = "Konvertierung mit Fehlern · flowmo öffnen";
 
 /* Einstellungen */
 "settings.title" = "Einstellungen";
@@ -42,6 +42,8 @@
 "settings.toolsExtraHint" = "Zusätzlich gedrückt: Zuschnitt, Hintergrund und Komprimieren.";
 "settings.commandNote" = "⌘ beim Ziehen bedeutet im Finder „Bewegen“ statt „Kopieren“.";
 "settings.menuOpacity" = "Deckkraft Kreis-Menü";
+"settings.openAtLogin" = "Beim Anmelden starten";
+"settings.openAtLoginHint" = "flowmo startet nach dem Hochfahren still in der Menüleiste.";
 "settings.reset" = "Zurücksetzen";
 "settings.apply" = "Übernehmen";
 "settings.problem.openComboEmpty" = "Mindestens eine Taste zum Öffnen wählen.";
@@ -76,7 +78,7 @@
 "error.tooLarge" = "Die Bildabmessungen sind zu groß. Bitte eine kleinere Datei verwenden.";
 
 /* Beispielbild */
-"sample.headline" = "Hallo, FLowmo.";
+"sample.headline" = "Hallo, flowmo.";
 "sample.subline" = "Ziehen. Taste. Fertig.";
 
 /* Editor-Aktionen */
@@ -84,7 +86,7 @@
 "editor.apply" = "Übernehmen";
 "editor.save" = "Sichern";
 
-"menu.wheelLabel" = "FLowmo Formatmenü";
+"menu.wheelLabel" = "flowmo Formatmenü";
 
 /* Editor-Beschriftungen, die bisher englisch geblieben waren */
 "editor.padding" = "Rand";
@@ -128,6 +130,7 @@
 "help.settingsOpenCombo" = "Diese Tasten halten, während du eine Datei im Finder ziehst.";
 "help.settingsToolsExtra" = "Zusätzlich zu den oberen Tasten halten, um die Bildwerkzeuge zu öffnen.";
 "help.settingsOpacity" = "Deckkraft des schwebenden Kreis-Menüs. Je weiter links, desto durchsichtiger. Die Fenster bleiben immer deckend.";
+"help.settingsOpenAtLogin" = "Startet flowmo automatisch, wenn du dich am Mac anmeldest. Es erscheint nur das Symbol in der Menüleiste, kein Fenster. Auch unter Systemeinstellungen → Allgemein → Anmeldeobjekte abschaltbar.";
 "help.settingsReset" = "Setzt auf die Werkseinstellung zurück. Wirkt erst mit „Übernehmen“.";
 "help.settingsApply" = "Speichert die Einstellungen und schließt das Fenster.";
 
@@ -189,8 +192,8 @@
 
 /* Einleitung */
 "menu.intro" = "Einleitung";
-"intro.title" = "Willkommen bei FLowmo";
-"intro.welcome.body" = "FLowmo sitzt in der Menüleiste und arbeitet direkt im Finder mit.";
+"intro.title" = "Willkommen bei flowmo";
+"intro.welcome.body" = "flowmo sitzt in der Menüleiste und arbeitet direkt im Finder mit.";
 "intro.welcome.point1" = "Bilder, PDFs und Textdokumente umwandeln.";
 "intro.welcome.point2" = "Zuschneiden, Hintergrund, Komprimieren, Text und Unterschrift.";
 "intro.welcome.point3" = "Alles bleibt auf deinem Mac. Nichts wird hochgeladen, Originale bleiben unverändert.";
@@ -204,7 +207,7 @@
 "intro.try.step1" = "Zeig das Beispielbild im Finder.";
 "intro.try.step2" = "Zieh es und drück dabei %@.";
 "intro.try.step3" = "Lass es auf „JPG“ los. Die Kopie liegt daneben.";
-"intro.try.note" = "FLowmo bleibt in der Menüleiste aktiv. Dort findest du Einstellungen und diese Einleitung.";
+"intro.try.note" = "flowmo bleibt in der Menüleiste aktiv. Dort findest du Einstellungen und diese Einleitung.";
 "intro.revealSample" = "Beispiel im Finder zeigen";
 "help.revealSample" = "Legt ein Beispielbild an und zeigt es im Finder, damit du das Rad ohne eigene Datei ausprobieren kannst.";
 "intro.back" = "Zurück";

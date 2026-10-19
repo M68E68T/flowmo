@@ -1,4 +1,4 @@
-# FLowmo 0.4
+# flowmo 0.5
 
 Native Mac-App mit schwebendem Kreis-Menü für lokale Dateikonvertierung.
 Eigenständige Implementierung nach der bereitgestellten Tangerine-Videovorlage.
@@ -14,8 +14,8 @@ und `dist`.
 
 **Neueste Version: [github.com/M68E68T/flowmo/releases/latest](https://github.com/M68E68T/flowmo/releases/latest)**
 
-1. `FLowmo-….zip` herunterladen und per Doppelklick entpacken.
-2. `FLowmo.app` in den Ordner **Programme** ziehen.
+1. `flowmo-….zip` herunterladen und per Doppelklick entpacken.
+2. `flowmo.app` in den Ordner **Programme** ziehen.
 3. Beim ersten Start einmal freigeben: Warnung mit **„Fertig“** schließen, dann
    **Systemeinstellungen → Datenschutz & Sicherheit → „Dennoch öffnen“**
    (Details unter [„Was beim Empfänger passiert“](#was-beim-empfänger-passiert)).
@@ -48,10 +48,16 @@ Danach erscheint sie nicht mehr von selbst. Über das Menüleisten-Symbol →
 
 ## Schnellstart
 
-Die bereits gebaute App liegt in **dist/FLowmo.app**. Per Doppelklick öffnen.
-Das Fenster darf geschlossen werden: FLowmo bleibt in der Menüleiste aktiv.
+Die bereits gebaute App liegt in **dist/flowmo.app**. Per Doppelklick öffnen.
+Das Fenster darf geschlossen werden: flowmo bleibt in der Menüleiste aktiv.
 Beim ersten Start werden Einstellungen, Einleitungsstatus und gespeicherte
 Unterschriften aus der bisherigen App automatisch übernommen.
+
+**Autostart:** Beim ersten Start trägt sich flowmo als Anmeldeobjekt ein und
+startet ab dann nach jedem Hochfahren still in der Menüleiste, ohne Fenster.
+Abschalten lässt sich das in den Einstellungen („Beim Anmelden starten“) oder
+unter Systemeinstellungen → Allgemein → Anmeldeobjekte; danach schaltet flowmo
+es nie wieder von selbst ein.
 
 1. Im Finder eine Bild- oder PDF-Datei mit gedrückter Maustaste ziehen.
 2. Währenddessen die Auslösetaste drücken (ab Werk **Shift**). Das orange
@@ -120,7 +126,7 @@ Bilddateien werden abgelehnt statt still auf das erste Bild reduziert.
 ## Bearbeiten und Signieren
 
 „Bearbeiten“ öffnet zuerst eine fortlaufende Textansicht. PDF-Text wird übernommen;
-bei Scans und Bildern erkennt FLowmo den Text lokal. Du schreibst direkt auf den
+bei Scans und Bildern erkennt flowmo den Text lokal. Du schreibst direkt auf den
 Dokumentseiten und kannst Schriftart, Größe, Farbe, Fett/Kursiv/Unterstreichen,
 Absatzausrichtung und Listen ändern. Der Text fließt automatisch auf weitere
 A4-Seiten. Die Textansicht startet bei lesbaren 100 %. Einpassen zeigt die ganze
@@ -135,7 +141,7 @@ werden nicht automatisch auf den neu umbrochenen Text übertragen.
 
 In der Textansicht wählst du unten PDF oder DOCX und klickst auf „Sichern“ (⌘S).
 Es entsteht eine neue Datei neben dem Original; der Editor bleibt offen. DOCX
-lässt sich in FLowmo wieder bearbeiten. Schließen oder Beenden fragt bei
+lässt sich in flowmo wieder bearbeiten. Schließen oder Beenden fragt bei
 ungesicherten Änderungen nach. Ohne Sichern wird keine Ausgabedatei angelegt.
 
 Einzelne Bilder und PDFs lassen sich mit der Werkzeugtaste unter „Bearbeiten"
@@ -159,7 +165,7 @@ versehen. Alles wird **fest eingebrannt**; das Original bleibt unverändert.
   Signatur-Werkzeug tauscht sie aus. Was in der Vorschau steht, wird beim
   Sichern genau so geschrieben.
 - **Schwärzen entfernt Text wirklich.** Ein schwarzer Balken allein würde
-  nichts nützen: Der Text bliebe im PDF und wäre weiterhin kopierbar. FLowmo
+  nichts nützen: Der Text bliebe im PDF und wäre weiterhin kopierbar. flowmo
   rechnet eine geschwärzte Seite deshalb zu einem Bild um. Diese Seite ist
   danach nicht mehr durchsuchbar — darauf wird im Editor hingewiesen.
 - Seiten **ohne** Schwärzung behalten ihre Textebene: Text bleibt scharf,
@@ -196,7 +202,7 @@ Details: docs/VALIDATION.md.
 ## In Cursor weiterarbeiten
 
 Diesen Ordner öffnen. Codex liest AGENTS.md und docs/PROJECT_BRIEF.md.
-Quellen: Sources/FLowmo (App/UI) und Sources/FLowmoCore (Verarbeitung).
+Quellen: Sources/Flowmo (App/UI) und Sources/FlowmoCore (Verarbeitung).
 
 ```bash
 bash scripts/build-app.sh
@@ -224,33 +230,33 @@ Paket erstellen:
 bash scripts/package.sh
 ```
 
-Das erzeugt `dist/FLowmo-0.4.0.zip`. Verpackt wird mit `ditto`, nicht mit
+Das erzeugt `dist/flowmo-0.5.0.zip`. Verpackt wird mit `ditto`, nicht mit
 `zip` — ein gewöhnliches `zip` zerstört die Bundle-Struktur und die Signatur.
 
 ### Was beim Empfänger passiert
 
 Die App ist **ad hoc signiert**, also nicht mit einer Developer ID von Apple.
-Beim ersten Doppelklick zeigt macOS deshalb „„FLowmo“ nicht geöffnet – Apple
-konnte nicht überprüfen, ob „FLowmo“ frei von Schadsoftware ist" mit den
+Beim ersten Doppelklick zeigt macOS deshalb „„flowmo“ nicht geöffnet – Apple
+konnte nicht überprüfen, ob „flowmo“ frei von Schadsoftware ist" mit den
 Knöpfen „In den Papierkorb legen“ und „Fertig“.
 
 Der funktionierende Weg, einmal pro Mac (macOS 15 Sequoia und neuer):
 
 1. In der Warnung **„Fertig“** klicken – **nicht** „In den Papierkorb legen“.
 2. **Systemeinstellungen → Datenschutz & Sicherheit** öffnen und ganz nach
-   unten scrollen. Dort steht „„FLowmo“ wurde blockiert …“ mit dem Knopf
+   unten scrollen. Dort steht „„flowmo“ wurde blockiert …“ mit dem Knopf
    **„Dennoch öffnen“**.
-3. FLowmo erneut öffnen, im Dialog nochmals **„Dennoch öffnen“** wählen und mit
+3. flowmo erneut öffnen, im Dialog nochmals **„Dennoch öffnen“** wählen und mit
    Passwort oder Touch ID bestätigen.
 
-Unter macOS 13 und 14 geht es auch kürzer: **Rechtsklick** auf FLowmo.app →
+Unter macOS 13 und 14 geht es auch kürzer: **Rechtsklick** auf flowmo.app →
 **„Öffnen“** → im Dialog nochmals **„Öffnen“**. Ab macOS 15 gibt es diesen
 Knopf nicht mehr.
 
 Wer das Terminal kennt, kann die Sperre stattdessen direkt entfernen:
 
 ```bash
-xattr -dr com.apple.quarantine /Applications/FLowmo.app
+xattr -dr com.apple.quarantine /Applications/flowmo.app
 ```
 
 ### Ehrlich dazu

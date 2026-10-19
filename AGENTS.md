@@ -1,4 +1,4 @@
-# FLowmo — instructions for coding agents
+# flowmo — instructions for coding agents
 
 Read README.md, docs/PROJECT_BRIEF.md and docs/VALIDATION.md before changing code.
 Speak German. The user is a beginner: explain concrete next actions briefly.
@@ -20,7 +20,7 @@ Do not introduce dark dashboards, oversized headings or side-by-side editor layo
 
 ## Engineering
 - macOS 13+, Swift 5.9+ language mode. No external dependencies.
-- App/UI in Sources/FLowmo; processing and testable models in FLowmoCore.
+- App/UI in Sources/Flowmo; processing and testable models in FlowmoCore.
 - No uploads, telemetry, destructive source-file changes or silent overwrites.
 - Run conversion off the main thread. Keep window/UI changes on MainActor.
 - Reject unsupported and multipage-image inputs explicitly. PDF page export includes all pages.
@@ -63,7 +63,7 @@ Do not introduce dark dashboards, oversized headings or side-by-side editor layo
   user-visible text: add the key to BOTH Localizable.strings files. SwiftUI resolves
   plain string literals itself; use tr(_:_:) for AppKit titles and for texts with
   inserted values, where interpolating into the literal would corrupt the key.
-- Preferences keys are FLowmo*; the Flosted* and OrbitDrop* keys exist only for the one-time
+- Preferences keys are flowmo*; the FLowmo*, Flosted* and OrbitDrop* keys exist only for the one-time
   migration in Preferences.load and must not be reused.
 - Localizable.strings: only straight quotes delimit a value. A typographic
   closing quote inside a German string terminated it early, macOS then DISCARDED
@@ -98,6 +98,13 @@ Do not introduce dark dashboards, oversized headings or side-by-side editor layo
 - Program state does not belong in Preferences. The settings window has a Reset
   button, so anything stored there is wiped by it: IntroState keeps its own key
   for that reason. Add further flags the same way, not as Preferences fields.
+- Start at login goes through SMAppService.mainApp only (LoginItem.swift). It is
+  switched on automatically once per app location (LoginItemState, so a move to
+  Applications re-registers); once the user turns it off it never comes back. A login launch stays in the menu bar:
+  no dashboard, no introduction (LaunchPlan). Do not reintroduce a LaunchAgent.
+- The product name is "flowmo", lowercase, in every visible place, file and
+  bundle; Swift modules follow Swift casing (Flowmo, FlowmoCore). The mixed-case
+  FLowmo* keys exist only for the one-time migration from 0.4.
 - In PageManager the thumbnails are the source of truth, not the document:
   they may be reordered, trimmed or extended. Operate on PDFPage objects, never
   on document indices, or the wrong page gets changed.
@@ -113,17 +120,17 @@ Do not introduce dark dashboards, oversized headings or side-by-side editor layo
 - Remote: github.com/M68E68T/flowmo (public). Commit freely, but push and
   publish releases only when the user explicitly asks for it.
 - Icon and interface share the BrandMark vectors. Regenerate the committed
-  Resources/FLowmo.icns with scripts/make-icon.sh after changing BrandMark;
+  Resources/flowmo.icns with scripts/make-icon.sh after changing BrandMark;
   never hand-draw a second version of the mark.
 
 ## Validation
 Build: bash scripts/build-app.sh
 Test: swift test --cache-path .build/cache --config-path .build/config --security-path .build/security
 Restricted execution may need --disable-sandbox for SwiftPM's nested sandbox.
-Run: dist/FLowmo.app (or bash Starten.command).
+Run: dist/flowmo.app (or bash Starten.command).
 Seventy-six tests cover processing, collision safety, PDF/DOCX, menu models,
 modifier combinations, preference persistence and the UX regressions from
-docs/UI_UX_AUDIT.md. FLowmoAppTests drives AppKit views offscreen with synthetic
+docs/UI_UX_AUDIT.md. FlowmoAppTests drives AppKit views offscreen with synthetic
 events; it never posts events to the user's desktop.
 App bundle is ad hoc signed, NOT Developer ID signed/notarized.
 Keep caches/binaries out of future git commits; distributable binaries belong in Releases.

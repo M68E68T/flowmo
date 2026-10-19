@@ -1,7 +1,7 @@
 /* Menu bar and main menu */
-"menu.open" = "Open FLowmo";
+"menu.open" = "Open flowmo";
 "menu.settings" = "Settings…";
-"menu.quit" = "Quit FLowmo";
+"menu.quit" = "Quit flowmo";
 "menu.file" = "File";
 "menu.chooseFiles" = "Choose Files…";
 
@@ -32,7 +32,7 @@
 "status.unsupportedDrag" = "Please drag images, PDFs or text documents of the same type.";
 "status.noTools" = "No image tools are available for this selection.";
 "status.menuOpen" = "Wheel open · %d file(s)";
-"status.convertedWithErrors" = "Conversion finished with errors · open FLowmo";
+"status.convertedWithErrors" = "Conversion finished with errors · open flowmo";
 
 /* Settings */
 "settings.title" = "Settings";
@@ -42,6 +42,8 @@
 "settings.toolsExtraHint" = "Held in addition: Crop, Add BG and Compress.";
 "settings.commandNote" = "Holding ⌘ while dragging means “move” instead of “copy” in Finder.";
 "settings.menuOpacity" = "Wheel opacity";
+"settings.openAtLogin" = "Open at login";
+"settings.openAtLoginHint" = "flowmo starts quietly in the menu bar after you log in.";
 "settings.reset" = "Reset";
 "settings.apply" = "Apply";
 "settings.problem.openComboEmpty" = "Pick at least one key to open the menu.";
@@ -76,7 +78,7 @@
 "error.tooLarge" = "The image dimensions are too large. Please use a smaller file.";
 
 /* Sample image */
-"sample.headline" = "Hello, FLowmo.";
+"sample.headline" = "Hello, flowmo.";
 "sample.subline" = "Drag. Press. Done.";
 
 /* Editor actions */
@@ -84,7 +86,7 @@
 "editor.apply" = "Apply";
 "editor.save" = "Save";
 
-"menu.wheelLabel" = "FLowmo format menu";
+"menu.wheelLabel" = "flowmo format menu";
 
 /* Editor labels that had stayed English */
 "editor.padding" = "Padding";
@@ -128,6 +130,7 @@
 "help.settingsOpenCombo" = "Hold these keys while dragging a file in Finder.";
 "help.settingsToolsExtra" = "Hold in addition to the keys above to open the image tools.";
 "help.settingsOpacity" = "Opacity of the floating wheel. Further left means more transparent. Windows always stay opaque.";
+"help.settingsOpenAtLogin" = "Starts flowmo automatically when you log in to your Mac. Only the menu bar icon appears, no window. Can also be switched off in System Settings → General → Login Items.";
 "help.settingsReset" = "Restores the factory settings. Takes effect with “Apply”.";
 "help.settingsApply" = "Saves the settings and closes the window.";
 
@@ -189,8 +192,8 @@
 
 /* Introduction */
 "menu.intro" = "Introduction";
-"intro.title" = "Welcome to FLowmo";
-"intro.welcome.body" = "FLowmo lives in the menu bar and works right inside Finder.";
+"intro.title" = "Welcome to flowmo";
+"intro.welcome.body" = "flowmo lives in the menu bar and works right inside Finder.";
 "intro.welcome.point1" = "Convert images, PDFs and text documents.";
 "intro.welcome.point2" = "Crop, add backgrounds, compress, add text and signatures.";
 "intro.welcome.point3" = "Everything stays on your Mac. Nothing is uploaded, originals stay untouched.";
@@ -204,7 +207,7 @@
 "intro.try.step1" = "Show the sample image in Finder.";
 "intro.try.step2" = "Drag it and press %@ while dragging.";
 "intro.try.step3" = "Let go on “JPG”. The copy appears next to it.";
-"intro.try.note" = "FLowmo stays active in the menu bar. Settings and this introduction live there too.";
+"intro.try.note" = "flowmo stays active in the menu bar. Settings and this introduction live there too.";
 "intro.revealSample" = "Show sample in Finder";
 "help.revealSample" = "Creates a sample image and shows it in Finder so you can try the wheel without your own file.";
 "intro.back" = "Back";

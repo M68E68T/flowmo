@@ -1,4 +1,4 @@
-# FLowmo – UI-/UX-Prüfung vom 19.10.2026
+# flowmo – UI-/UX-Prüfung vom 19.10.2026
 
 ## Gesamturteil
 
@@ -16,7 +16,7 @@ Insgesamt sind **13 priorisierte Befunde** dokumentiert. Davon ist die fehlende 
 
 ## Behebungsstand (Nachtrag 19.10.2026)
 
-Nach dem Audit wurden alle 13 Befunde im Code behoben. Release-Build ohne Warnung; **76 Tests ohne Fehler**, darunter `UXRegressionTests` (Core) und `CanvasBehaviorTests` (neues Target `FLowmoAppTests`, AppKit-Views offscreen mit synthetischen Ereignissen). Die Spalte „Nachweis“ nennt das Ergebnis der Praxisabnahme vom 19.10.2026 (siehe unten).
+Nach dem Audit wurden alle 13 Befunde im Code behoben. Release-Build ohne Warnung; **76 Tests ohne Fehler**, darunter `UXRegressionTests` (Core) und `CanvasBehaviorTests` (neues Target `FlowmoAppTests`, AppKit-Views offscreen mit synthetischen Ereignissen). Die Spalte „Nachweis“ nennt das Ergebnis der Praxisabnahme vom 19.10.2026 (siehe unten).
 
 | Befund | Behebung | Nachweis |
 | --- | --- | --- |
@@ -38,7 +38,7 @@ Aus den weiteren Risiken ebenfalls umgesetzt: `PageDragSource` räumt den Drag-Z
 
 ### Praxisabnahme in der laufenden App (19.10.2026)
 
-Bedient wurde die reguläre App `dist/FLowmo.app` mit echter Maus und Tastatur (CGEvent) sowie über Bedienungshilfen; Belege per Bildschirmfoto. Testdateien lagen in einem temporären Ordner; das Original blieb bytegleich, keine Nutzerdateien wurden berührt. Dabei fielen folgende neue Fehler auf, alle behoben und erneut geprüft:
+Bedient wurde die reguläre App `dist/flowmo.app` mit echter Maus und Tastatur (CGEvent) sowie über Bedienungshilfen; Belege per Bildschirmfoto. Testdateien lagen in einem temporären Ordner; das Original blieb bytegleich, keine Nutzerdateien wurden berührt. Dabei fielen folgende neue Fehler auf, alle behoben und erneut geprüft:
 
 | Nr. | Fehler | Ursache und Behebung |
 | --- | --- | --- |
@@ -99,7 +99,7 @@ Prioritäten: **P1** = erheblicher Bedienfehler oder Verlust einer Bearbeitung; 
 
 **Erwartet:** Der vorhandene Text bleibt unverändert. **Tatsächlich:** Er verschwindet. Die Rückgängig-Schaltfläche stellt ihn wieder her. Praktisch am erzeugten Bild geprüft; der Dialog zeigte vor dem Abbrechen ausdrücklich „Audittext bleibt erhalten“.
 
-**Ursache:** `Sources/FLowmo/AnnotationEditor.swift:92` leert `textDraft` und ruft auch beim Abbrechen `commitText()` auf. Dieser entfernt bei leerem Entwurf das vorhandene Element.
+**Ursache:** `Sources/Flowmo/AnnotationEditor.swift:92` leert `textDraft` und ruft auch beim Abbrechen `commitText()` auf. Dieser entfernt bei leerem Entwurf das vorhandene Element.
 
 **Lösung:** Zwischen neu angelegtem, noch leerem Element und Bearbeitung eines vorhandenen Elements unterscheiden. Beim Abbrechen eines vorhandenen Textes nur den Dialog schließen; dessen Inhalt und Undo-Zustand unverändert lassen.
 
@@ -109,7 +109,7 @@ Prioritäten: **P1** = erheblicher Bedienfehler oder Verlust einer Bearbeitung; 
 
 **Erwartet:** Auswahlgriffe und die Eigenschaftsleiste mit passenden Aktionen bleiben sichtbar. **Tatsächlich:** Die Eigenschaftsleiste erscheint nicht. Die in der Dokumentation zugesagten Eigenschaften sind nicht erreichbar. Praktisch geprüft.
 
-**Ursache:** `Sources/FLowmo/AnnotationCanvas.swift:247` überträgt `selected` nur von SwiftUI in die AppKit-View. Die View verändert ihren eigenen Zustand, meldet aber keine Auswahländerung an das `@Binding` zurück. Ein folgendes Update kann die Auswahl wieder auf `nil` setzen. `selectedAnnotation` im Editor bleibt leer.
+**Ursache:** `Sources/Flowmo/AnnotationCanvas.swift:247` überträgt `selected` nur von SwiftUI in die AppKit-View. Die View verändert ihren eigenen Zustand, meldet aber keine Auswahländerung an das `@Binding` zurück. Ein folgendes Update kann die Auswahl wieder auf `nil` setzen. `selectedAnnotation` im Editor bleibt leer.
 
 **Lösung:** Einen ausdrücklichen Auswahl-Callback vorsehen und beide Zustände synchron halten, ohne während `updateNSView` eine neue Aktualisierungsschleife zu erzeugen. Danach Auswahl, Griffe, Tastatur-Löschen, Farbe, Textgröße und Drehung erneut praktisch prüfen.
 
@@ -119,7 +119,7 @@ Prioritäten: **P1** = erheblicher Bedienfehler oder Verlust einer Bearbeitung; 
 
 **Erwartet:** Alles auswählen/Einfügen und Undo/Redo funktionieren. **Tatsächlich:** Im Textfeld bleibt der alte Text unmarkiert und unverändert. Die Undo-/Redo-Kürzel änderten den Editorzustand nicht; die entsprechenden Schaltflächen funktionierten. Das einfache Werkzeugkürzel P und das Beenden mit ⌘Q funktionierten in derselben Testinstanz.
 
-**Codehinweis:** `Sources/FLowmo/FLowmoApp.swift:166` installiert nur App- und Datei-Menü. Ein Bearbeiten-Menü mit den üblichen Responder-Aktionen fehlt. Die SwiftUI-`keyboardShortcut`-Deklarationen allein stellten den beobachteten Betrieb im manuell gehosteten Fenster nicht sicher.
+**Codehinweis:** `Sources/Flowmo/FlowmoApp.swift:166` installiert nur App- und Datei-Menü. Ein Bearbeiten-Menü mit den üblichen Responder-Aktionen fehlt. Die SwiftUI-`keyboardShortcut`-Deklarationen allein stellten den beobachteten Betrieb im manuell gehosteten Fenster nicht sicher.
 
 **Lösung:** Standard-Bearbeitungsaktionen über die Responder-Kette bereitstellen und Undo/Redo für den aktiven Editor korrekt anbinden. In Textfeldern muss das Text-Undo Vorrang haben; im Canvas das Annotationen-Undo. Danach auch Zahlen- und Pfadfelder prüfen. Das Verhalten des nativen Dateidialogs bleibt zusätzlich eine gesonderte Prüflücke.
 
@@ -129,7 +129,7 @@ Prioritäten: **P1** = erheblicher Bedienfehler oder Verlust einer Bearbeitung; 
 
 **Erwartet:** Konvertierung, Bearbeiten und Seitenverwaltung sind über das Hauptfenster auffindbar. **Tatsächlich:** Bei `tools = false` erscheinen nur DOCX/JPG/PNG/TXT, bei `tools = true` nur Bearbeiten/Seiten. In beiden PDF-Zuständen fehlt der Umschalter. Beide Zustände wurden an getrennten Testinstanzen geprüft.
 
-**Ursache:** `Sources/FLowmo/FLowmoApp.swift:330` zeigt den Umschalter ausschließlich für ein einzelnes Bild. Der gespeicherte Laufzeitzustand `tools` gilt jedoch auch für PDFs.
+**Ursache:** `Sources/Flowmo/FlowmoApp.swift:330` zeigt den Umschalter ausschließlich für ein einzelnes Bild. Der gespeicherte Laufzeitzustand `tools` gilt jedoch auch für PDFs.
 
 **Lösung:** Den Moduswechsel für ein einzelnes PDF ebenfalls anbieten. Die Verfügbarkeit und Statusmeldung aus demselben Aktionskatalog ableiten. Auswahlwechsel von Bild → PDF → Dokument → Mehrfachauswahl prüfen.
 
@@ -149,7 +149,7 @@ Prioritäten: **P1** = erheblicher Bedienfehler oder Verlust einer Bearbeitung; 
 
 **Erwartet:** Eine klar erkennbare Illustration oder eine funktionierende Beispielaktion. **Tatsächlich:** JPG wird orange und erscheint in der Mitte, sonst passiert nichts. Auch Bedienungshilfen melden die Formate als Buttons. Praktisch geprüft.
 
-**Ursache:** `Sources/FLowmo/IntroView.swift:56` verwendet das echte `EmbeddedWheel` mit leeren Callbacks. `.allowsHitTesting(false)` deaktiviert weder dessen AppKit-Tracking noch die selbst erzeugten Accessibility-Aktionen.
+**Ursache:** `Sources/Flowmo/IntroView.swift:56` verwendet das echte `EmbeddedWheel` mit leeren Callbacks. `.allowsHitTesting(false)` deaktiviert weder dessen AppKit-Tracking noch die selbst erzeugten Accessibility-Aktionen.
 
 **Lösung:** Ein ausdrücklich nicht interaktiver Darstellungsmodus mit deaktivierten AppKit-Ereignissen und ohne Aktions-Buttons im Accessibility-Baum. Dieselbe Zeichenquelle verwenden; keine zweite Menügestaltung einführen.
 
@@ -157,7 +157,7 @@ Prioritäten: **P1** = erheblicher Bedienfehler oder Verlust einer Bearbeitung; 
 
 **Nachstellen für die Reparaturabnahme:** Kleineren Zuschnitt einstellen, dann Ecke, Kantenmittelpunkt und die Innenfläche ziehen.
 
-**Erwartet:** Griff skaliert die entsprechende Kante; Innenfläche verschiebt den bestehenden Ausschnitt. **Codebefund:** `Sources/FLowmo/ImageEditor.swift:300` setzt bei jedem Mouse-down lediglich einen neuen Startpunkt. `mouseDragged` baut daraus ein neues Rechteck. Die unten gezeichneten acht Griffe werden nie getroffen oder unterschieden. Eine bestehende Auswahl kann damit nicht über diese Griffe nachjustiert werden.
+**Erwartet:** Griff skaliert die entsprechende Kante; Innenfläche verschiebt den bestehenden Ausschnitt. **Codebefund:** `Sources/Flowmo/ImageEditor.swift:300` setzt bei jedem Mouse-down lediglich einen neuen Startpunkt. `mouseDragged` baut daraus ein neues Rechteck. Die unten gezeichneten acht Griffe werden nie getroffen oder unterschieden. Eine bestehende Auswahl kann damit nicht über diese Griffe nachjustiert werden.
 
 **Lösung:** Griffe vor der Innenfläche testen, Griff-/Verschiebe-/Neuanlage-Modus unterscheiden, Gegenecke und Seitenverhältnis erhalten und Grenzen beachten. Die gezeichneten Griffe wurden visuell geprüft; der vollständige Mausablauf konnte wegen der Fernsteuerungsfehler nicht zuverlässig abgeschlossen werden.
 
@@ -199,7 +199,7 @@ Prioritäten: **P1** = erheblicher Bedienfehler oder Verlust einer Bearbeitung; 
 
 **Erwartet:** Hinweis auf eine beschädigte/nicht lesbare Bilddatei. **Tatsächlich:** „Animierte oder mehrseitige Bilddateien werden nicht in ein Einzelbild umgewandelt.“ Keine Ausgabe wird erstellt. Praktisch und über den Core geprüft.
 
-**Ursache:** `Sources/FLowmoCore/ImageConverter.swift:58` behandelt jede Bildanzahl ungleich 1 als Animation/Mehrseitigkeit; das schließt eine Quelle mit 0 Bildern ein.
+**Ursache:** `Sources/FlowmoCore/ImageConverter.swift:58` behandelt jede Bildanzahl ungleich 1 als Animation/Mehrseitigkeit; das schließt eine Quelle mit 0 Bildern ein.
 
 **Lösung:** 0 Bilder als unlesbar ablehnen; erst mehr als 1 Bild als Animation/Mehrseitigkeit melden.
 

@@ -12,7 +12,7 @@ Später soll die App auf GitHub an Freunde verteilt werden. Nichts wurde publizi
 - GlobalDragController beobachtet den öffentlichen Drag-Pasteboard-Generationszähler,
   gedrückte Maustaste und die Modifier-Tasten, ohne globale Tastatur-Hooks.
 - Auslöse- und Werkzeug-Tastenkombination sind frei aus ⇧ ⌃ ⌥ ⌘ wählbar
-  (Preferences in FLowmoCore, gespeichert in UserDefaults). Bewusst keine
+  (Preferences in FlowmoCore, gespeichert in UserDefaults). Bewusst keine
   Buchstabentasten: Polling funktioniert mitten im Drag und braucht keine
   Berechtigung, ein registrierter Hotkey würde dort nicht zuverlässig feuern.
 - Deckkraft von Kreis-Menü und Fenstern per Regler 35–100 %, über
@@ -35,7 +35,7 @@ Der Nutzer hat den vollständigen Ablauf mit „funktioniert top“ bestätigt.
 JPG-Konvertierung im überarbeiteten Menü wurde zusätzlich in der laufenden App geprüft.
 Die Fernsteuerung meldete gelegentlich parallele Nutzerinteraktion; deren aktive
 Editorfenster nicht schließen. Für UI-Vergleiche kann eine temporäre Kopie des App-
-Bundles mit FLowmoPreviewOnly=true und eigener Bundle-ID erstellt werden;
+Bundles mit flowmoPreviewOnly=true und eigener Bundle-ID erstellt werden;
 diese Kopie startet keine globale Drag-Erkennung.
 
 ## Aktueller UI-Auftrag
