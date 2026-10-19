@@ -25,7 +25,11 @@ final class RadialMenuView: NSView {
     /// so it glides from one action to the next and hovering never redraws the wheel.
     private let highlight = RadialHighlightView()
     private let centerLabel = RadialCenterView()
-    private var highlightAngle = 0.0
+    private(set) var highlightAngle = 0.0
+    /// Last pointer angle around the centre and which way it was last moving,
+    /// so the highlight turns with the hand rather than the short way round.
+    private var pointerAngle: Double?
+    private var pointerClockwise: Bool?
     private var tracking: NSTrackingArea?
     override var acceptsFirstResponder: Bool { true }
 
@@ -91,7 +95,10 @@ final class RadialMenuView: NSView {
     }
     private func moveHighlight(from old: Int?) {
         guard let selected, actions.indices.contains(selected) else { highlight.show(false); return }
-        let target = RadialGeometry.rotation(to: selected, count: actions.count, from: highlightAngle)
+        let target = old.map {
+            RadialGeometry.rotation(to: selected, from: $0, count: actions.count,
+                                    current: highlightAngle, clockwise: pointerClockwise)
+        } ?? RadialGeometry.rotation(to: selected, count: actions.count, from: highlightAngle)
         // Entering from outside lands directly; only a move between sectors glides.
         highlight.turn(from: highlightAngle, to: target, animated: old != nil && window != nil && !Motion.reduced)
         highlightAngle = target
@@ -142,10 +149,18 @@ final class RadialMenuView: NSView {
         addTrackingArea(tracking!)
     }
     func updateSelection(_ point: CGPoint) {
+        let angle = RadialGeometry.angle(of: point, around: center)
+        if let previous = pointerAngle {
+            let delta = RadialGeometry.turn(from: previous, to: angle)
+            if delta != 0 { pointerClockwise = delta > 0 }
+        }
+        pointerAngle = angle
         selected = RadialGeometry.index(point: point, center: center, inner: radius * 0.385, outer: radius, count: actions.count)
     }
+    /// A pointer coming back in starts a fresh gesture.
+    private func forgetPointer() { pointerAngle = nil; pointerClockwise = nil }
     override func mouseMoved(with event: NSEvent) { updateSelection(convert(event.locationInWindow, from: nil)) }
-    override func mouseExited(with event: NSEvent) { selected = nil }
+    override func mouseExited(with event: NSEvent) { forgetPointer(); selected = nil }
     override func mouseDown(with event: NSEvent) {
         guard isInteractive else { return }
         updateSelection(convert(event.locationInWindow, from: nil))
@@ -169,7 +184,7 @@ final class RadialMenuView: NSView {
         updateSelection(convert(sender.draggingLocation, from: nil))
         return selected == nil ? [] : .copy
     }
-    override func draggingExited(_ sender: NSDraggingInfo?) { selected = nil; if isFloating { onExit?() } }
+    override func draggingExited(_ sender: NSDraggingInfo?) { forgetPointer(); selected = nil; if isFloating { onExit?() } }
     override func prepareForDragOperation(_ sender: NSDraggingInfo) -> Bool {
         updateSelection(convert(sender.draggingLocation, from: nil)); return selected != nil
     }

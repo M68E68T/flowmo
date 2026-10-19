@@ -26,6 +26,24 @@ final class WorkflowTests: XCTestCase {
         let wound = -10 * Double.pi
         XCTAssertEqual(RadialGeometry.rotation(to: 0, count: 6, from: wound), wound, accuracy: 1e-9)
     }
+    func testHighlightTurnsTheWayThePointerMoved() {
+        let quarter = Double.pi / 2
+        // Opposite sectors tie on distance; the pointer decides.
+        XCTAssertEqual(RadialGeometry.rotation(to: 2, from: 0, count: 4, current: 0, clockwise: true), -2 * quarter, accuracy: 1e-9)
+        XCTAssertEqual(RadialGeometry.rotation(to: 2, from: 0, count: 4, current: 0, clockwise: false), 2 * quarter, accuracy: 1e-9)
+        // Wrap-around: last to first clockwise is one step, against it three.
+        XCTAssertEqual(RadialGeometry.rotation(to: 0, from: 3, count: 4, current: -3 * quarter, clockwise: true), -4 * quarter, accuracy: 1e-9)
+        XCTAssertEqual(RadialGeometry.rotation(to: 0, from: 3, count: 4, current: -3 * quarter, clockwise: false), 0, accuracy: 1e-9)
+        // No pointer, no direction: the short way, as before.
+        XCTAssertEqual(RadialGeometry.rotation(to: 3, from: 0, count: 4, current: 0, clockwise: nil), quarter, accuracy: 1e-9)
+    }
+    func testPointerTurnCrossesTwelveOClock() {
+        let left = RadialGeometry.angle(of: CGPoint(x: -1, y: 10), around: .zero)
+        let right = RadialGeometry.angle(of: CGPoint(x: 1, y: 10), around: .zero)
+        XCTAssertGreaterThan(RadialGeometry.turn(from: left, to: right), 0, "Über 12 Uhr nach rechts ist Uhrzeigersinn.")
+        XCTAssertLessThan(RadialGeometry.turn(from: right, to: left), 0)
+        XCTAssertLessThan(abs(RadialGeometry.turn(from: left, to: right)), 0.5)
+    }
     func testStalePasteboardCannotActivateMenu() {
         var tracker = DragSessionTracker(pasteboardCount: 7)
         XCTAssertFalse(tracker.update(buttonDown: true,pasteboardCount:7,hasFiles:true))

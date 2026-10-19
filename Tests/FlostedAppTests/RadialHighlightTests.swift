@@ -65,4 +65,24 @@ final class RadialHighlightTests: XCTestCase {
         let point = probe(0, count: count, in: view)
         XCTAssertFalse(isOrange(color(at: point, in: image, height: view.bounds.height)))
     }
+
+    /// Straight across the wheel lands on the opposite sector, a tie on
+    /// distance. Passing above the centre is a clockwise sweep, below it
+    /// counter-clockwise, and the highlight has to go the same way.
+    @MainActor func testHighlightFollowsThePointerAcrossTheWheel() throws {
+        for (above, clockwise) in [(true, true), (false, false)] {
+            let view = RadialMenuView(frame: CGRect(x: 0, y: 0, width: 336, height: 336))
+            view.actions = ActionCatalog.actions(for: [URL(fileURLWithPath: "/x.png")], tools: true)
+            XCTAssertEqual(view.actions.count, 4)
+            let c = view.center, r = view.radius * 0.7, lift = (above ? 1 : -1) * view.radius * 0.45
+            view.updateSelection(CGPoint(x: c.x - r, y: c.y + lift))      // left sector
+            let start = view.highlightAngle
+            view.updateSelection(CGPoint(x: c.x + r, y: c.y + lift))      // right sector, one jump
+            XCTAssertEqual(view.selected, 1)
+            let turned = view.highlightAngle - start
+            XCTAssertEqual(abs(turned), .pi, accuracy: 1e-9)
+            // AppKit angles grow counter-clockwise.
+            XCTAssertEqual(turned < 0, clockwise, above ? "über der Mitte" : "unter der Mitte")
+        }
+    }
 }

@@ -64,13 +64,34 @@ public enum ActionCatalog {
 public enum RadialGeometry {
     public static func index(point: CGPoint, center: CGPoint, inner: Double, outer: Double, count: Int) -> Int? {
         guard count > 0 else { return nil }
-        let dx = point.x - center.x, dy = point.y - center.y
-        let distance = hypot(dx, dy)
+        let distance = hypot(point.x - center.x, point.y - center.y)
         guard distance >= inner, distance <= outer else { return nil }
         let step = 2 * Double.pi / Double(count)
-        var angle = atan2(dx, dy) + step / 2
+        var angle = self.angle(of: point, around: center) + step / 2
         if angle < 0 { angle += 2 * .pi }
         return Int(angle / step) % count
+    }
+    /// Clockwise from twelve o'clock, the same way the sectors are counted.
+    public static func angle(of point: CGPoint, around center: CGPoint) -> Double {
+        atan2(point.x - center.x, point.y - center.y)
+    }
+    /// Signed change between two pointer angles in (-π, π]; positive is clockwise.
+    public static func turn(from previous: Double, to next: Double) -> Double {
+        var delta = (next - previous).truncatingRemainder(dividingBy: 2 * .pi)
+        if delta > .pi { delta -= 2 * .pi }
+        if delta <= -.pi { delta += 2 * .pi }
+        return delta
+    }
+    /// Turns the highlight from sector `previous` to `index` in the direction
+    /// the pointer moved, however many sectors that takes, so it always travels
+    /// with the hand. Without a direction it falls back to the short way.
+    public static func rotation(to index: Int, from previous: Int, count: Int,
+                                current: Double, clockwise: Bool?) -> Double {
+        guard count > 0, let clockwise else { return rotation(to: index, count: count, from: current) }
+        let step = 2 * Double.pi / Double(count)
+        let sectors = ((clockwise ? index - previous : previous - index) % count + count) % count
+        // AppKit turns counter-clockwise for positive angles.
+        return current + (clockwise ? -1 : 1) * Double(sectors) * step
     }
     /// Clockwise angle (radians, AppKit's counter-clockwise positive) that turns
     /// sector 0 onto sector `index`, continued from `current` the short way
