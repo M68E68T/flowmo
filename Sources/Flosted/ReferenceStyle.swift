@@ -57,8 +57,7 @@ struct ReferenceHeader: View {
             HStack {
                 Button(action: close) {
                     Image(systemName: "xmark").font(.system(size: 9, weight: .semibold))
-                        .frame(width: 22, height: 22).background(.black.opacity(0.055), in: Circle())
-                }.buttonStyle(.plain).accessibilityLabel(Text("common.close"))
+                }.buttonStyle(ReferenceIconButton()).accessibilityLabel(Text("common.close"))
                 Spacer()
             }.padding(.horizontal, 13)
         }.frame(height: 40)
@@ -69,6 +68,7 @@ struct ReferenceHeader: View {
 struct ReferenceSegments: View {
     let values: [(String, Double)]
     @Binding var selection: Double
+    @Namespace private var indicator
     var body: some View {
         HStack(spacing: 1) {
             ForEach(values, id: \.0) { label, value in
@@ -76,21 +76,74 @@ struct ReferenceSegments: View {
                     Text(label).font(.system(size: 10.5, weight: selection == value ? .medium : .regular))
                         .frame(maxWidth: .infinity).frame(height: 21)
                         .foregroundStyle(selection == value ? .white : ReferenceStyle.ink)
-                        .background(selection == value ? ReferenceStyle.accent : .clear, in: RoundedRectangle(cornerRadius: 4))
+                        .background {
+                            // One shared shape slides between segments instead of
+                            // one segment switching off and another switching on.
+                            if selection == value {
+                                RoundedRectangle(cornerRadius: 4).fill(ReferenceStyle.accent)
+                                    .matchedGeometryEffect(id: "selection", in: indicator)
+                            }
+                        }
+                        .contentShape(Rectangle())
                 }.buttonStyle(.plain)
             }
         }.padding(2).background(.black.opacity(0.065), in: RoundedRectangle(cornerRadius: 6))
+        .motion(Motion.snappy, value: selection)
     }
 }
 
 struct ReferenceActionButton: ButtonStyle {
     var primary = false
     func makeBody(configuration: Configuration) -> some View {
+        ActionButtonBody(configuration: configuration, primary: primary)
+    }
+}
+
+/// A view, not inline in the style, so it can hold hover state. Presses answer
+/// at once and release with a short spring; hover only deepens the fill.
+private struct ActionButtonBody: View {
+    let configuration: ButtonStyleConfiguration
+    let primary: Bool
+    @Environment(\.isEnabled) private var isEnabled
+    @State private var hovering = false
+    private var fill: Color {
+        if primary { return ReferenceStyle.accent.opacity(configuration.isPressed ? 0.75 : (hovering ? 0.9 : 1)) }
+        return Color.black.opacity(configuration.isPressed ? 0.12 : (hovering ? 0.09 : 0.065))
+    }
+    var body: some View {
         configuration.label.font(.system(size: 11, weight: primary ? .semibold : .regular))
             .padding(.horizontal, 10).frame(height: 23)
             .foregroundStyle(primary ? Color.white : ReferenceStyle.ink)
-            .background(primary ? ReferenceStyle.accent.opacity(configuration.isPressed ? 0.75 : 1) : Color.black.opacity(configuration.isPressed ? 0.12 : 0.065), in: RoundedRectangle(cornerRadius: 5))
+            .background(fill, in: RoundedRectangle(cornerRadius: 5))
             .overlay(RoundedRectangle(cornerRadius: 5).strokeBorder(primary ? Color.black.opacity(0.13) : .clear, lineWidth: 0.5))
+            .scaleEffect(configuration.isPressed ? 0.97 : 1)
+            .opacity(isEnabled ? 1 : 0.45)
+            .onHover { hovering = $0 && isEnabled }
+            .motion(Motion.quick, value: hovering)
+            .motion(Motion.snappy, value: configuration.isPressed)
+            .motion(Motion.quick, value: isEnabled)
+    }
+}
+
+/// The small round buttons (close, settings) with the same hover and press feel.
+struct ReferenceIconButton: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        IconButtonBody(configuration: configuration)
+    }
+}
+
+private struct IconButtonBody: View {
+    let configuration: ButtonStyleConfiguration
+    @State private var hovering = false
+    var body: some View {
+        configuration.label
+            .frame(width: 22, height: 22)
+            .background(.black.opacity(configuration.isPressed ? 0.13 : (hovering ? 0.09 : 0.055)), in: Circle())
+            .contentShape(Circle())
+            .scaleEffect(configuration.isPressed ? 0.92 : 1)
+            .onHover { hovering = $0 }
+            .motion(Motion.quick, value: hovering)
+            .motion(Motion.snappy, value: configuration.isPressed)
     }
 }
 
@@ -113,6 +166,9 @@ final class ReferenceWindow: NSWindow {
         isOpaque = false; backgroundColor = .clear; hasShadow = true
         isMovableByWindowBackground = true; isReleasedWhenClosed = false
         appearance = NSAppearance(named: .aqua)
+        // The system's own short fade-and-scale on open and close; it follows
+        // Reduce Motion by itself.
+        animationBehavior = .utilityWindow
         resizeObserver = NotificationCenter.default.addObserver(forName: NSWindow.didResizeNotification,
             object: self, queue: .main) { [weak self] _ in
                 MainActor.assumeIsolated {
@@ -186,11 +242,22 @@ struct ModifierPicker: View {
                         .foregroundStyle(on ? .white : ReferenceStyle.ink)
                         .background(on ? ReferenceStyle.accent : .black.opacity(0.065),
                                     in: RoundedRectangle(cornerRadius: 6))
+                        .contentShape(Rectangle())
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(PressScale())
                 .accessibilityLabel(Text(LocalizedStringKey(entry.name)))
                 .accessibilityAddTraits(on ? .isSelected : [])
             }
         }
+        .motion(Motion.snappy, value: combo)
+    }
+}
+
+/// Plain look, but the key gives a little under the finger.
+private struct PressScale: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .scaleEffect(configuration.isPressed ? 0.94 : 1)
+            .motion(Motion.snappy, value: configuration.isPressed)
     }
 }

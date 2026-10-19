@@ -29,6 +29,7 @@ struct AnnotationEditor: View {
     @State private var annotations: [Annotation] = []
     @State private var selected: UUID?
     @State private var tool: AnnotationTool = .select
+    @Namespace private var toolIndicator
     @State private var style = AnnotationStyle()
     @State private var page = 0
     @State private var backdrop: CGImage?
@@ -59,8 +60,12 @@ struct AnnotationEditor: View {
                 // The row is always reserved: inserting it on selection shifted
                 // and rescaled the canvas under the pointer, so a click followed
                 // by a drag missed the handle it had just revealed.
-                if let current = selectedAnnotation { propertyBar(current) }
-                else { Color.clear.frame(height: 28).padding(.bottom, 9) }
+                // Cross-fades in that fixed slot: nothing travels, nothing shifts.
+                ZStack {
+                    if let current = selectedAnnotation { propertyBar(current).transition(.opacity) }
+                    else { Color.clear.frame(height: 28).padding(.bottom, 9) }
+                }
+                .motion(Motion.quick, value: selected)
                 canvasArea.allowsHitTesting(!saving)
                 if source.pageCount > 1 { pageStrip }
                 if hasUnfinished {
@@ -68,6 +73,7 @@ struct AnnotationEditor: View {
                         .font(.system(size: 10)).foregroundStyle(accent)
                         .padding(.horizontal, 16).padding(.top, 8)
                         .fixedSize(horizontal: false, vertical: true)
+                        .transition(.opacity)
                 }
                 if annotations.contains(where: { $0.kind.removesContent }) {
                     // The quality trade-off has to be said out loud.
@@ -75,9 +81,12 @@ struct AnnotationEditor: View {
                         .font(.system(size: 10)).foregroundStyle(accent)
                         .padding(.horizontal, 16).padding(.top, 8)
                         .fixedSize(horizontal: false, vertical: true)
+                        .transition(.opacity)
                 }
                 footer
             }
+            .motion(Motion.smooth, value: hasUnfinished)
+            .motion(Motion.smooth, value: annotations.contains(where: { $0.kind.removesContent }))
         }
         .frame(minWidth: AnnotationLayout.minimum.width, maxWidth: .infinity,
                minHeight: AnnotationLayout.minimum.height, maxHeight: .infinity)
@@ -162,6 +171,7 @@ struct AnnotationEditor: View {
             ForEach(AnnotationTool.allCases) { item in toolButton(item) }
             Spacer()
         }
+        .motion(Motion.snappy, value: tool)
         .padding(.horizontal, 16).padding(.vertical, 9)
     }
     private func toolButton(_ item: AnnotationTool) -> some View {
@@ -174,8 +184,15 @@ struct AnnotationEditor: View {
             .padding(.horizontal, 9)
             .frame(height: 26)
             .foregroundStyle(active ? Color.white : ReferenceStyle.ink)
-            .background(active ? accent : Color.black.opacity(0.06),
-                        in: RoundedRectangle(cornerRadius: 6))
+            .background(Color.black.opacity(0.06), in: RoundedRectangle(cornerRadius: 6))
+            .background {
+                // One accent shape slides to the chosen tool, by click or shortcut.
+                if active {
+                    RoundedRectangle(cornerRadius: 6).fill(accent)
+                        .matchedGeometryEffect(id: "tool", in: toolIndicator)
+                }
+            }
+            .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
         .keyboardShortcut(item.shortcut, modifiers: [])
@@ -231,6 +248,7 @@ struct AnnotationEditor: View {
                 .keyboardShortcut("0", modifiers: .command)
             Text(zoom == nil ? tr("editor.zoomFitShort") : "\(Int((zoom ?? 1) * 100)) %")
                 .font(.system(size: 10)).monospacedDigit().frame(width: 52)
+                .contentTransition(.opacity).motion(Motion.quick, value: zoom)
             Button { step(1) } label: { Image(systemName: "plus.magnifyingglass") }
                 .buttonStyle(.plain).keyboardShortcut("+", modifiers: .command)
         }.help(Text("help.zoom"))
@@ -263,12 +281,13 @@ struct AnnotationEditor: View {
             Spacer()
             zoomControls
             Spacer()
-            if saving { ProgressView().controlSize(.small) }
+            if saving { ProgressView().controlSize(.small).transition(.opacity) }
             Button("editor.save", action: save)
                 .buttonStyle(ReferenceActionButton(primary: true)).keyboardShortcut(.defaultAction)
                 .disabled(complete.isEmpty).help(Text("help.saveEditor"))
         }
         .padding(13).disabled(saving)
+        .motion(Motion.quick, value: saving)
         .overlay(alignment: .top) { Rectangle().fill(.black.opacity(0.075)).frame(height: 0.6) }
     }
 

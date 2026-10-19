@@ -48,13 +48,14 @@ struct PageManager: View {
                 toolbar.disabled(saving || importing)
                 ScrollView {
                     LazyVGrid(columns: columns, spacing: 14) {
-                        ForEach(thumbs) { thumb in thumbnail(thumb) }
+                        ForEach(thumbs) { thumb in thumbnail(thumb).transition(Motion.appear) }
                     }.padding(16)
                     .frame(maxWidth: .infinity, minHeight: 260, alignment: .top)
                 }
                 .background(Color.black.opacity(0.04), in: RoundedRectangle(cornerRadius: 9))
                 .overlay(RoundedRectangle(cornerRadius: 9)
                     .strokeBorder(importTargeted ? accent : .clear, lineWidth: 2))
+                .motion(Motion.quick, value: importTargeted)
                 .onDrop(of: [.fileURL], isTargeted: $importTargeted) { providers in
                     guard !saving, !importing else { return false }
                     receive(providers, nil)   // free area: append
@@ -110,6 +111,7 @@ struct PageManager: View {
             Text(verbatim: "\((index ?? 0) + 1)").font(.system(size: 10)).monospacedDigit()
                 .foregroundStyle(isSelected ? accent : .secondary)
         }
+        .motion(Motion.quick, value: isSelected)
         .contentShape(Rectangle())
         .overlay(PageDragSource(image: thumb.preview, label: tr("pages.page", (index ?? 0) + 1),
                                 token: thumb.id.debugDescription, selected: isSelected,
@@ -172,8 +174,10 @@ struct PageManager: View {
     private func deleteSelected() {
         let keep = thumbs.filter { !selection.contains($0.id) }
         guard !keep.isEmpty else { return }
-        thumbs = keep
-        selection = []
+        withAnimation(Motion.smooth) {
+            thumbs = keep
+            selection = []
+        }
     }
     private func appendDocument() {
         let panel = NSOpenPanel(); panel.canChooseFiles = true; panel.canChooseDirectories = false
@@ -215,8 +219,10 @@ struct PageManager: View {
             let added = report.0.map(PageThumb.init)
             if !added.isEmpty {
                 let at = min(max(index ?? thumbs.count, 0), thumbs.count)
-                thumbs.insert(contentsOf: added, at: at)
-                selection = Set(added.map(\.id))
+                withAnimation(Motion.smooth) {
+                    thumbs.insert(contentsOf: added, at: at)
+                    selection = Set(added.map(\.id))
+                }
                 refreshPreviews()
             }
             importing = false
@@ -261,7 +267,7 @@ private struct ThumbDropDelegate: DropDelegate {
         guard !info.hasItemsConforming(to: [.fileURL]), let dragging, dragging != target,
               let from = thumbs.firstIndex(where: { $0.id == dragging }),
               let to = thumbs.firstIndex(where: { $0.id == target }) else { return }
-        withAnimation(.easeInOut(duration: 0.15)) {
+        withAnimation(Motion.snappy) {
             thumbs.move(fromOffsets: IndexSet(integer: from), toOffset: to > from ? to + 1 : to)
         }
     }

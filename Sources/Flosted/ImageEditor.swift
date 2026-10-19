@@ -53,8 +53,12 @@ struct ImageEditor: View {
                         CropCanvas(image: image, selection: $selection, ratio: ratio)
                     } else if let preview {
                         Image(nsImage: preview).resizable().interpolation(.high).scaledToFit().padding(action == .background ? 12 : 22)
-                    } else { ProgressView().controlSize(.small) }
+                            .transition(.opacity)
+                    } else { ProgressView().controlSize(.small).transition(.opacity) }
                 }
+                // Only the first preview fades in; later recomputes swap at once,
+                // so dragging a slider never lags behind the pointer.
+                .motion(Motion.quick, value: preview == nil)
                 .frame(maxWidth: .infinity,minHeight:action == .compress ? 300 : 340,maxHeight: .infinity)
                 .allowsHitTesting(!saving)
                 .background(action == .background ? Color.black.opacity(0.035) : .clear,in:RoundedRectangle(cornerRadius:9))
@@ -68,12 +72,13 @@ struct ImageEditor: View {
                 HStack {
                     Button("editor.reset",action:reset).buttonStyle(ReferenceActionButton()).help(Text("help.resetEditor"))
                     Spacer()
-                    if saving { ProgressView().controlSize(.small) }
+                    if saving { ProgressView().controlSize(.small).transition(.opacity) }
                     Button(tr(action == .background ? "editor.saveWithBackground" : action == .crop ? "editor.apply" : "editor.save"),action:save)
                         .buttonStyle(ReferenceActionButton(primary:true)).keyboardShortcut(.defaultAction)
                         .help(Text("help.saveEditor"))
                         .disabled(action == .compress && (previewBusy || previewError != nil))
                 }.padding(13).disabled(saving)
+                    .motion(Motion.quick, value: saving)
                     .overlay(alignment:.top) { Rectangle().fill(.black.opacity(0.075)).frame(height:0.6) }
             }
         }.frame(width:action == .background ? 440:420,height:action == .background ? 660:640)
@@ -101,6 +106,9 @@ struct ImageEditor: View {
         }
     }
     private var backgroundControls: some View {
+        backgroundRows.motion(Motion.snappy, value: selectedPreset)
+    }
+    private var backgroundRows: some View {
         VStack(alignment: .leading, spacing: 11) {
             HStack(alignment:.top,spacing:8) {
                 Text("editor.backgroundLabel").font(.system(size:10)).frame(width:66,alignment:.leading).padding(.top,5)

@@ -77,6 +77,7 @@ final class AppController: NSObject, NSApplicationDelegate, ObservableObject {
     private var introWindow: NSWindow?
     private var editors: [NSWindowController] = []
     private var statusItem: NSStatusItem?
+    private var toast: NSPanel?
     private var closeObserver: NSObjectProtocol?
 
     var readyMessage: String { tr("status.ready", preferences.openCombo.symbols) }
@@ -340,14 +341,35 @@ final class AppController: NSObject, NSApplicationDelegate, ObservableObject {
         owner.showWindow(nil); window.makeKeyAndOrderFront(nil); NSApp.activate(ignoringOtherApps: true)
         status = tr("status.opened", title)
     }
+    /// Rises a few points while fading in and fades out on its own. A newer
+    /// toast replaces the current one instead of stacking on top of it.
     private func showToast(_ text: String) {
         guard let screen = NSScreen.screens.first(where: { $0.frame.contains(NSEvent.mouseLocation) }) ?? NSScreen.main else { return }
+        if let previous = toast { dismissToast(previous) }
         let area = screen.visibleFrame
-        let panel = NSPanel(contentRect: CGRect(x: area.midX - 215, y: area.minY + 35, width: 430, height: 56), styleMask: [.borderless, .nonactivatingPanel], backing: .buffered, defer: false)
+        let rest = CGRect(x: area.midX - 215, y: area.minY + 35, width: 430, height: 56)
+        let rise: CGFloat = Motion.reduced ? 0 : 8
+        let panel = NSPanel(contentRect: rest.offsetBy(dx: 0, dy: -rise), styleMask: [.borderless, .nonactivatingPanel], backing: .buffered, defer: false)
         panel.isOpaque = false; panel.backgroundColor = .clear; panel.level = .floating; panel.hidesOnDeactivate = false
+        panel.isReleasedWhenClosed = false; panel.ignoresMouseEvents = true
         panel.contentView = NSHostingView(rootView: ReferenceSurface { Text(text).font(.system(size:12,weight:.medium)).padding(16).frame(width:430,height:56) })
+        panel.alphaValue = 0
         panel.orderFrontRegardless()
-        DispatchQueue.main.asyncAfter(deadline: .now() + 4) { panel.orderOut(nil) }
+        toast = panel
+        NSAnimationContext.runAnimationGroup { context in
+            context.duration = 0.22
+            context.timingFunction = CAMediaTimingFunction(name: .easeOut)
+            panel.animator().alphaValue = 1
+            panel.animator().setFrame(rest, display: true)
+        }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 4) { [weak self] in self?.dismissToast(panel) }
+    }
+    private func dismissToast(_ panel: NSPanel) {
+        if toast === panel { toast = nil }
+        NSAnimationContext.runAnimationGroup({ context in
+            context.duration = 0.2
+            panel.animator().alphaValue = 0
+        }, completionHandler: { panel.orderOut(nil) })
     }
 }
 
@@ -367,16 +389,16 @@ struct Dashboard: View {
                     Spacer()
                     if !ActionCatalog.actions(for: controller.selection, tools: true).isEmpty {
                         Toggle("dashboard.tools",isOn:$controller.tools).toggleStyle(.button).controlSize(.small)
-                            .help(Text("help.tools"))
+                            .help(Text("help.tools")).transition(.opacity)
                     }
                     Button(action: controller.showSettings) {
                         Image(systemName:"gearshape").font(.system(size:11))
-                            .frame(width:22,height:22).background(.black.opacity(0.055),in:Circle())
-                    }.buttonStyle(.plain).accessibilityLabel(Text("dashboard.settings"))
+                    }.buttonStyle(ReferenceIconButton()).accessibilityLabel(Text("dashboard.settings"))
                         .help(Text("help.settings"))
                 }.font(.system(size:11)).padding(.horizontal,18).padding(.top,13)
                 ZStack {
                     if controller.selection.isEmpty {
+                        Group {
                         Circle().strokeBorder(.black.opacity(0.08),lineWidth:0.7).frame(width:290,height:290)
                         VStack(spacing:14) {
                             Image(systemName:"doc").font(.system(size:38,weight:.ultraLight)).foregroundStyle(.secondary)
@@ -385,6 +407,7 @@ struct Dashboard: View {
                             Text("dashboard.dropHint").font(.system(size:11)).foregroundStyle(.secondary)
                             Text(hintLine).font(.system(size:10)).foregroundStyle(.secondary)
                         }
+                        }.transition(Motion.appear)
                     }
                     EmbeddedWheel(urls: controller.selection, tools: controller.tools,
                         action: { controller.perform($0, files: $1) }, receive: { controller.select($0) })
@@ -392,15 +415,18 @@ struct Dashboard: View {
                 if let first = controller.selection.first {
                     Text(controller.selection.count == 1 ? first.lastPathComponent : tr("dashboard.fileCount", controller.selection.count))
                         .font(.system(size:10)).lineLimit(1).foregroundStyle(.secondary).padding(.horizontal,18)
+                        .transition(.opacity)
                 }
                 if !controller.tools, controller.selection.first.map(FileKind.detect) == .pdf {
                     Text("dashboard.docxNote")
                         .font(.system(size: 10)).foregroundStyle(.secondary)
                         .fixedSize(horizontal: false, vertical: true).padding(.horizontal, 18)
+                        .transition(.opacity)
                 }
                 HStack(spacing: 7) {
-                    if controller.busy { ProgressView().controlSize(.small) }
+                    if controller.busy { ProgressView().controlSize(.small).transition(.opacity) }
                     Text(controller.status).font(.system(size:10)).lineLimit(2)
+                        .contentTransition(.opacity).motion(Motion.quick, value: controller.status)
                 }.frame(minHeight:26).padding(.horizontal,18)
                 Spacer(minLength: 0)
                 HStack {
@@ -409,15 +435,20 @@ struct Dashboard: View {
                     Spacer()
                     if controller.outputs.isEmpty {
                         Button("dashboard.trySample") { controller.loadExample() }.buttonStyle(ReferenceActionButton(primary:true))
-                            .help(Text("help.trySample"))
+                            .help(Text("help.trySample")).transition(.opacity)
                     } else {
                         Button("dashboard.showInFinder") { NSWorkspace.shared.activateFileViewerSelecting(controller.outputs) }.buttonStyle(ReferenceActionButton(primary:true))
-                            .help(Text("help.showInFinder"))
+                            .help(Text("help.showInFinder")).transition(.opacity)
                     }
                 }.padding(13).disabled(controller.busy)
                     .overlay(alignment:.top) { Rectangle().fill(.black.opacity(0.075)).frame(height:0.6) }
             }
         }
+        // State changes arrive from the controller; the view decides how they move.
+        .motion(Motion.smooth, value: controller.selection)
+        .motion(Motion.smooth, value: controller.tools)
+        .motion(Motion.quick, value: controller.outputs)
+        .motion(Motion.quick, value: controller.busy)
         .frame(width: DashboardLayout.size.width, height: DashboardLayout.size.height)
         .alert("Flosted", isPresented: Binding(get: { controller.failure != nil }, set: { if !$0 { controller.failure = nil } })) {
             Button("common.ok") { controller.failure = nil }

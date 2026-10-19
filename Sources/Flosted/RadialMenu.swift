@@ -3,18 +3,29 @@ import SwiftUI
 import FlostedCore
 
 final class RadialMenuView: NSView {
-    var actions: [FileAction] = [] { didSet { selected = nil; glass.isHidden = actions.isEmpty; painter.needsDisplay = true; updateAccessibility() } }
-    var urls: [URL] = []
+    var actions: [FileAction] = [] { didSet {
+        guard actions != oldValue else { return }
+        crossfade()
+        selected = nil; glass.isHidden = actions.isEmpty
+        painter.needsDisplay = true; centerLabel.needsDisplay = true
+        refreshHighlight(); updateAccessibility()
+    } }
+    var urls: [URL] = [] { didSet { if urls != oldValue { centerLabel.needsDisplay = true } } }
     var onAction: ((FileAction, [URL]) -> Void)?
     var onExit: (() -> Void)?
     var onDragEntered: (([URL]) -> Void)?
-    var selected: Int? { didSet { if oldValue != selected { painter.needsDisplay = true } } }
+    var selected: Int? { didSet { if oldValue != selected { centerLabel.needsDisplay = true; moveHighlight(from: oldValue) } } }
     let isInteractive: Bool
     var isFloating = true
     var center: CGPoint { CGPoint(x: bounds.midX, y: bounds.midY) }
     var radius: CGFloat { min(bounds.width, bounds.height) / 2 - 13 }
     private let glass = NSVisualEffectView()
     private let painter = RadialDrawingView()
+    /// The hot sector is a mask turned around the centre instead of a repaint,
+    /// so it glides from one action to the next and hovering never redraws the wheel.
+    private let highlight = RadialHighlightView()
+    private let centerLabel = RadialCenterView()
+    private var highlightAngle = 0.0
     private var tracking: NSTrackingArea?
     override var acceptsFirstResponder: Bool { true }
 
@@ -22,6 +33,7 @@ final class RadialMenuView: NSView {
     init(frame: NSRect, interactive: Bool) {
         isInteractive = interactive
         super.init(frame: frame)
+        wantsLayer = true
         glass.isHidden = actions.isEmpty
         glass.material = .popover
         glass.blendingMode = .behindWindow
@@ -33,6 +45,11 @@ final class RadialMenuView: NSView {
         painter.wantsLayer = true
         painter.setAccessibilityElement(false)
         addSubview(painter, positioned: .above, relativeTo: glass)
+        highlight.setAccessibilityElement(false)
+        addSubview(highlight, positioned: .above, relativeTo: painter)
+        centerLabel.owner = self
+        centerLabel.setAccessibilityElement(false)
+        addSubview(centerLabel, positioned: .above, relativeTo: highlight)
         if interactive { registerForDraggedTypes([.fileURL]) }
         setAccessibilityElement(true)
         setAccessibilityRole(.group)
@@ -44,11 +61,55 @@ final class RadialMenuView: NSView {
         super.layout()
         let r = radius + 5
         let circle = CGRect(x: center.x-r,y: center.y-r,width:r*2,height:r*2)
-        glass.frame=bounds;painter.frame=bounds
+        glass.frame=bounds;painter.frame=bounds;highlight.frame=bounds
+        centerLabel.frame = CGRect(x: center.x - 44, y: center.y - 20, width: 88, height: 40)
         glass.maskImage = NSImage(size:bounds.size,flipped:false) { _ in
             NSColor.white.setFill(); NSBezierPath(ovalIn:circle).fill(); return true
         }
+        refreshHighlight()
         updateAccessibility()
+    }
+    override func viewDidChangeBackingProperties() { super.viewDidChangeBackingProperties(); refreshHighlight() }
+    /// Swapping the action set (tools key, new selection) cross-fades the
+    /// whole wheel instead of snapping between two drawings.
+    private func crossfade() {
+        guard window != nil, let layer else { return }
+        let fade = CATransition()
+        fade.type = .fade
+        fade.duration = Motion.reduced ? 0.12 : 0.18
+        fade.timingFunction = CAMediaTimingFunction(name: .easeInEaseOut)
+        layer.add(fade, forKey: "actions")
+    }
+    private func refreshHighlight() {
+        guard !actions.isEmpty, bounds.width > 0 else { return }
+        let outer = radius, inner = outer * 0.385
+        let step = 360 / Double(actions.count)
+        let high = (90 + step / 2 - 1.0) * .pi / 180
+        let path = roundedSector(outer: outer, inner: inner, high: high, low: high - (step - 2.0) * .pi / 180, corner: 12)
+        let scale = window?.backingScaleFactor ?? 2
+        highlight.update(path: path, labels: renderLabels(scale: scale), scale: scale)
+    }
+    private func moveHighlight(from old: Int?) {
+        guard let selected, actions.indices.contains(selected) else { highlight.show(false); return }
+        let target = RadialGeometry.rotation(to: selected, count: actions.count, from: highlightAngle)
+        // Entering from outside lands directly; only a move between sectors glides.
+        highlight.turn(from: highlightAngle, to: target, animated: old != nil && window != nil && !Motion.reduced)
+        highlightAngle = target
+        highlight.show(true)
+    }
+    /// White copies of the labels, revealed only under the highlight mask, so
+    /// the text colour changes exactly where the orange is at every frame.
+    private func renderLabels(scale: CGFloat) -> CGImage? {
+        guard let rep = NSBitmapImageRep(bitmapDataPlanes: nil, pixelsWide: Int(bounds.width * scale),
+                                         pixelsHigh: Int(bounds.height * scale), bitsPerSample: 8,
+                                         samplesPerPixel: 4, hasAlpha: true, isPlanar: false,
+                                         colorSpaceName: .deviceRGB, bytesPerRow: 0, bitsPerPixel: 0) else { return nil }
+        rep.size = bounds.size
+        NSGraphicsContext.saveGraphicsState()
+        NSGraphicsContext.current = NSGraphicsContext(bitmapImageRep: rep)
+        drawLabels(color: .white)
+        NSGraphicsContext.restoreGraphicsState()
+        return rep.cgImage
     }
     override func hitTest(_ point: NSPoint) -> NSView? { isInteractive && bounds.contains(convert(point,from:superview)) ? self : nil }
     private func updateAccessibility() {
@@ -134,13 +195,12 @@ final class RadialMenuView: NSView {
         NSGraphicsContext.restoreGraphicsState()
         NSColor.white.withAlphaComponent(0.55).setStroke(); disc.lineWidth = 0.8; disc.stroke()
         let step = 360 / Double(actions.count)
-        for (index, action) in actions.enumerated() {
+        for index in actions.indices {
             let high = (90 - Double(index) * step + step / 2 - 1.0) * .pi / 180
             let low = high - (step - 2.0) * .pi / 180
             let path = roundedSector(outer: outer, inner: inner, high: high, low: low, corner: 12)
-            let hot = selected == index
-            let top = hot ? NSColor(calibratedRed: 0.90, green: 0.24, blue: 0.015, alpha: 0.95) : NSColor(calibratedWhite: 1, alpha: 0.57)
-            let bottom = hot ? NSColor(calibratedRed: 1, green: 0.34, blue: 0.08, alpha: 0.96) : NSColor(calibratedRed: 1, green: 0.86, blue: 0.78, alpha: 0.50)
+            let top = NSColor(calibratedWhite: 1, alpha: 0.57)
+            let bottom = NSColor(calibratedRed: 1, green: 0.86, blue: 0.78, alpha: 0.50)
             if let context = NSGraphicsContext.current?.cgContext {
                 context.saveGState(); context.addPath(path); context.clip()
                 let gradient = CGGradient(colorsSpace: CGColorSpaceCreateDeviceRGB(), colors: [top.cgColor,bottom.cgColor] as CFArray, locations: [0,1])!
@@ -148,14 +208,8 @@ final class RadialMenuView: NSView {
                 context.restoreGState()
                 context.addPath(path); context.setStrokeColor(NSColor.white.withAlphaComponent(0.25).cgColor); context.setLineWidth(0.6); context.strokePath()
             }
-            let angle = (90 - Double(index) * step) * .pi / 180
-            let r = (outer + inner) / 2
-            let point = CGPoint(x: center.x + cos(angle) * r, y: center.y + sin(angle) * r)
-            // Wide sectors (up to four) fit full-size words; the steps are for six.
-            let fontSize: CGFloat = actions.count <= 4 && action.title.count <= 12 ? 14
-                : (action.title.count > 9 ? 10 : (action.title.count > 6 ? 11 : 14))
-            drawText(action.title, at: point, font: .systemFont(ofSize: fontSize, weight: .semibold), color: hot ? .white : .black)
         }
+        drawLabels(color: .black)
         let r = inner - 6
         let middle = NSBezierPath(ovalIn: CGRect(x:center.x-r,y:center.y-r,width:r*2,height:r*2))
         NSColor(calibratedRed: 1,green:0.53,blue:0.20,alpha:0.17).setFill(); middle.fill()
@@ -163,8 +217,26 @@ final class RadialMenuView: NSView {
         let pill = NSBezierPath(roundedRect: CGRect(x: center.x - 44, y: center.y - 20, width: 88, height: 40), xRadius: 20, yRadius: 20)
         NSColor(calibratedRed: 1, green: 0.86, blue: 0.61, alpha: 0.73).setFill(); pill.fill()
         NSColor.white.withAlphaComponent(0.35).setStroke();pill.lineWidth=0.6;pill.stroke()
+    }
+    func drawLabels(color: NSColor) {
+        guard !actions.isEmpty else { return }
+        let outer = radius, inner = outer * 0.385
+        let step = 360 / Double(actions.count)
+        for (index, action) in actions.enumerated() {
+            let angle = (90 - Double(index) * step) * .pi / 180
+            let r = (outer + inner) / 2
+            let point = CGPoint(x: center.x + cos(angle) * r, y: center.y + sin(angle) * r)
+            // Wide sectors (up to four) fit full-size words; the steps are for six.
+            let fontSize: CGFloat = actions.count <= 4 && action.title.count <= 12 ? 14
+                : (action.title.count > 9 ? 10 : (action.title.count > 6 ? 11 : 14))
+            drawText(action.title, at: point, font: .systemFont(ofSize: fontSize, weight: .semibold), color: color)
+        }
+    }
+    /// Drawn in the centre view's own coordinates; repainted alone on hover.
+    func drawCenterLabel(in rect: CGRect) {
+        guard !actions.isEmpty else { return }
         let label = selected.flatMap { actions.indices.contains($0) ? actions[$0].title : nil } ?? (urls.first?.pathExtension.uppercased() ?? "")
-        drawText(label, at: center, font: .systemFont(ofSize: label.count > 8 ? 9 : 13, weight: .semibold), color: .black)
+        drawText(label, at: CGPoint(x: rect.midX, y: rect.midY), font: .systemFont(ofSize: label.count > 8 ? 9 : 13, weight: .semibold), color: .black)
     }
     private func roundedSector(outer: CGFloat, inner: CGFloat, high: Double, low: Double, corner: CGFloat) -> CGPath {
         func p(_ r: CGFloat,_ a: Double) -> CGPoint { CGPoint(x:center.x+r*cos(a),y:center.y+r*sin(a)) }
@@ -193,6 +265,78 @@ private final class RadialDrawingView: NSView {
     override var isOpaque: Bool { false }
     override func hitTest(_ point:NSPoint) -> NSView? { nil }
     override func draw(_ dirtyRect:NSRect) { owner?.drawWheel(dirtyRect) }
+}
+
+private final class RadialCenterView: NSView {
+    weak var owner: RadialMenuView?
+    override var isOpaque: Bool { false }
+    override func hitTest(_ point: NSPoint) -> NSView? { nil }
+    override func draw(_ dirtyRect: NSRect) { owner?.drawCenterLabel(in: bounds) }
+}
+
+/// Orange fill plus white labels, both cut out by the same sector mask.
+/// Plain sublayers, not view backing layers, so AppKit never resets the
+/// opacity or transforms the animations work on.
+private final class RadialHighlightView: NSView {
+    private let group = CALayer()
+    private let fill = CAGradientLayer()
+    private let ink = CALayer()
+    private let masks = [CAShapeLayer(), CAShapeLayer()]
+
+    override init(frame: NSRect) {
+        super.init(frame: frame)
+        wantsLayer = true
+        fill.colors = [NSColor(calibratedRed: 0.90, green: 0.24, blue: 0.015, alpha: 0.95).cgColor,
+                       NSColor(calibratedRed: 1, green: 0.34, blue: 0.08, alpha: 0.96).cgColor]
+        fill.startPoint = CGPoint(x: 0.5, y: 1); fill.endPoint = CGPoint(x: 0.5, y: 0)
+        fill.mask = masks[0]; ink.mask = masks[1]
+        group.addSublayer(fill); group.addSublayer(ink)
+        group.opacity = 0
+        layer?.addSublayer(group)
+    }
+    required init?(coder: NSCoder) { fatalError("init(coder:) not supported") }
+    override var isOpaque: Bool { false }
+    override func hitTest(_ point: NSPoint) -> NSView? { nil }
+
+    func update(path: CGPath, labels: CGImage?, scale: CGFloat) {
+        CATransaction.begin(); CATransaction.setDisableActions(true)
+        for sublayer in [group, fill, ink] { sublayer.frame = bounds }
+        for mask in masks {
+            mask.bounds = bounds
+            mask.position = CGPoint(x: bounds.midX, y: bounds.midY)
+            mask.path = path
+        }
+        ink.contents = labels; ink.contentsScale = scale
+        CATransaction.commit()
+    }
+    func show(_ visible: Bool) {
+        let target: Float = visible ? 1 : 0
+        guard group.opacity != target else { return }
+        let fade = CABasicAnimation(keyPath: "opacity")
+        fade.fromValue = group.presentation()?.opacity ?? group.opacity
+        fade.toValue = target
+        fade.duration = visible ? 0.10 : 0.14
+        fade.timingFunction = CAMediaTimingFunction(name: .easeOut)
+        CATransaction.begin(); CATransaction.setDisableActions(true)
+        group.opacity = target
+        CATransaction.commit()
+        group.add(fade, forKey: "fade")
+    }
+    /// Additive, so a new target picked mid-glide continues from wherever the
+    /// highlight currently is instead of jumping back first.
+    func turn(from: Double, to: Double, animated: Bool) {
+        for mask in masks {
+            CATransaction.begin(); CATransaction.setDisableActions(true)
+            mask.setValue(to, forKeyPath: "transform.rotation.z")
+            CATransaction.commit()
+            guard animated, from != to else { continue }
+            let glide = Motion.spring("transform.rotation.z")
+            glide.isAdditive = true
+            glide.fromValue = from - to
+            glide.toValue = 0.0
+            mask.add(glide, forKey: nil)
+        }
+    }
 }
 
 private final class RadialActionElement: NSAccessibilityElement {

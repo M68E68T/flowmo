@@ -7,6 +7,9 @@ struct IntroView: View {
     @ObservedObject var controller: AppController
     let close: () -> Void
     @State private var card = 0
+    /// Which way the last step went, so cards slide in from the side they came from.
+    @State private var forward = true
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     private let accent = ReferenceStyle.accent
     private let cardCount = 4
 
@@ -20,21 +23,40 @@ struct IntroView: View {
         ReferenceSurface {
             VStack(spacing: 0) {
                 ReferenceHeader(title: tr("intro.title"), close: finish)
+                // The outer stack holds both cards while they pass each other;
+                // directly in the VStack they would sit one above the other.
                 ZStack {
-                    switch card {
-                    case 0: welcome
-                    case 1: convertCard
-                    case 2: editCard
-                    default: readyCard
+                    ZStack {
+                        switch card {
+                        case 0: welcome
+                        case 1: convertCard
+                        case 2: editCard
+                        default: readyCard
+                        }
                     }
+                    .id(card)
+                    .transition(cardTransition)
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .padding(.horizontal, 26).padding(.top, 18)
+                .clipped()
                 dots
                 footer
             }
         }
         .frame(width: IntroLayout.size.width, height: IntroLayout.size.height)
+    }
+
+    private var cardTransition: AnyTransition {
+        guard !reduceMotion else { return .opacity }
+        let shift: CGFloat = 24
+        return .asymmetric(
+            insertion: .opacity.combined(with: .offset(x: forward ? shift : -shift)),
+            removal: .opacity.combined(with: .offset(x: forward ? -shift : shift)))
+    }
+    private func go(to next: Int) {
+        forward = next > card
+        withAnimation(Motion.smooth) { card = next }
     }
 
     private func heading(_ key: String, _ symbol: String) -> some View {
@@ -123,18 +145,19 @@ struct IntroView: View {
     private var dots: some View {
         HStack(spacing: 6) {
             ForEach(0..<cardCount, id: \.self) { index in
-                Circle().fill(index == card ? accent : .black.opacity(0.15))
-                    .frame(width: 6, height: 6)
+                Capsule().fill(index == card ? accent : .black.opacity(0.15))
+                    .frame(width: index == card ? 16 : 6, height: 6)
             }
         }.padding(.vertical, 12)
+        .motion(Motion.snappy, value: card)
     }
     private var footer: some View {
         HStack {
-            Button("intro.back") { card = max(0, card - 1) }
+            Button("intro.back") { go(to: max(0, card - 1)) }
                 .buttonStyle(ReferenceActionButton()).disabled(card == 0)
             Spacer()
             Button(tr(card == cardCount - 1 ? "intro.finish" : "intro.next")) {
-                if card == cardCount - 1 { finish() } else { card += 1 }
+                if card == cardCount - 1 { finish() } else { go(to: card + 1) }
             }
             .buttonStyle(ReferenceActionButton(primary: true)).keyboardShortcut(.defaultAction)
         }

@@ -67,7 +67,15 @@ public enum FileConverter {
             space: CGColorSpaceCreateDeviceRGB(), bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue), let ref = page.pageRef else { throw ConversionError.encoding }
         let rect = CGRect(x: 0, y: 0, width: width, height: height)
         context.setFillColor(CGColor(gray: 1, alpha: 1)); context.fill(rect)
-        context.concatenate(ref.getDrawingTransform(.mediaBox, rect: rect, rotate: 0, preserveAspectRatio: true))
+        // getDrawingTransform can shrink a page, but does not upscale it to
+        // the raster's DPI. Map PDF points to pixels explicitly, including
+        // clockwise page rotation and a media box whose origin is not zero.
+        let turn = CGAffineTransform(rotationAngle: -CGFloat(page.rotation % 360) * .pi / 180)
+        let turnedBounds = bounds.applying(turn)
+        let scale = dpi / 72
+        context.scaleBy(x: scale, y: scale)
+        context.translateBy(x: -turnedBounds.minX, y: -turnedBounds.minY)
+        context.concatenate(turn)
         context.drawPDFPage(ref)
         guard let result = context.makeImage() else { throw ConversionError.encoding }; return result
     }

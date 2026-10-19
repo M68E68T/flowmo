@@ -28,13 +28,17 @@ struct SettingsView: View {
                     // Fixed height so the layout never jumps while toggling keys.
                     VStack(alignment: .leading, spacing: 5) {
                         if draft.openCombo.contains(.command) {
-                            note("settings.commandNote")
+                            note("settings.commandNote").transition(.opacity)
                         }
                         if let problem = draft.problem {
                             note(problem.messageKey).foregroundStyle(ReferenceStyle.accent)
+                                .transition(.opacity)
                         }
                         Spacer(minLength: 0)
                     }.frame(height: 46, alignment: .top)
+                    // Notes fade inside their reserved slot, so nothing below moves.
+                    .motion(Motion.quick, value: draft.openCombo.contains(.command))
+                    .motion(Motion.quick, value: draft.problem?.messageKey)
                     Divider().opacity(0.4)
                     ReferenceSlider(title: "settings.menuOpacity", value: live(\.menuOpacity))
                         .help(Text("help.settingsOpacity"))
@@ -70,6 +74,8 @@ struct SettingsView: View {
                 Spacer()
                 Text(combo.wrappedValue.isEmpty ? "—" : combo.wrappedValue.symbols)
                     .font(.system(size: 15, weight: .semibold))
+                    .contentTransition(.opacity)
+                    .motion(Motion.quick, value: combo.wrappedValue)
             }
             ModifierPicker(combo: combo)
             Text(hint).font(.system(size: 9.5)).foregroundStyle(.secondary)

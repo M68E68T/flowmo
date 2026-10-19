@@ -316,3 +316,27 @@ Dateizugriffsgrenzen blieben aktiv. Das lokale Bundle ist nur ad hoc signiert.
 - Offen: Signatur, Hintergrund-Werkzeug, Einstellungen, mehrere Bildschirme,
   große Dateien, Schließen während des Speicherns.
 
+## PDF-Bildexport: Skalierungskorrektur vom 19.10.2026
+
+- Behoben: Bei 150 DPI entstand eine große Bildfläche, während der PDF-Inhalt
+  unskaliert in ihrer Mitte stand. Der zusätzliche weiße Rand war Bestandteil
+  der Ausgabe, kein Finder-Vorschaufehler.
+- `FileConverter.render` bildet PDF-Punkte jetzt ausdrücklich über `dpi / 72`
+  auf Pixel ab und berücksichtigt Seitendrehung sowie verschobene Seitenursprünge.
+  Tatsächliche PDF-Ränder bleiben erhalten. Dieselbe Korrektur gilt für die
+  Editorvorschau, OCR und das Rasterisieren geschwärzter Seiten.
+- Vier neue `PDFRenderingTests`: Inhalt bis zum Seitenrand bei 36/72/110/150/200
+  DPI und allen vier Seitendrehungen, einschließlich verschobenem Ursprung;
+  Erhalt echter Ränder; mehrseitiger JPG-/PNG-Export einschließlich gespeicherter
+  Drehung und Originalschutz; partielle Schwärzung mit entferntem Text und
+  unverändert positioniertem Inhalt außerhalb des Balkens. Farbpixel werden
+  ausdrücklich in sRGB verglichen, unabhängig vom Geräteprofil.
+- Vollständige Tests: 82 Fälle, 0 Fehler, einschließlich OCR und bestehender
+  Schwärzungstests. Release-App mit Sprach-Lint erfolgreich gebaut.
+- Die gemeldete PDF ausschließlich aus einer Kopie in `.build` nach JPG und PNG
+  konvertiert (je 2338 × 2921 Pixel). JPG visuell geprüft: Der Inhalt füllt die
+  Seite wieder aus. Die Quelldatei auf dem Schreibtisch blieb bytegleich;
+  vorhandene Nutzer-Ausgaben wurden nicht überschrieben.
+- Die laufende Nutzerinstanz wurde nicht neu gestartet. Für den erneuten
+  Finder-Drag muss die frisch gebaute App aus `dist/Flosted.app` gestartet werden.
+

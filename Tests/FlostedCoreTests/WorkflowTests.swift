@@ -16,6 +16,16 @@ final class WorkflowTests: XCTestCase {
         let frame = RadialGeometry.frame(around: CGPoint(x:-1919,y:1079), size: CGSize(width:360,height:360), in:screen)
         XCTAssertTrue(screen.contains(frame))
     }
+    func testHighlightRotationTakesTheShortWay() {
+        let quarter = Double.pi / 2
+        XCTAssertEqual(RadialGeometry.rotation(to: 1, count: 4, from: 0), -quarter, accuracy: 1e-9)
+        // From the last sector to the first is one step forward, not three back.
+        XCTAssertEqual(RadialGeometry.rotation(to: 0, count: 4, from: -3 * quarter), -4 * quarter, accuracy: 1e-9)
+        XCTAssertEqual(RadialGeometry.rotation(to: 3, count: 4, from: 0), quarter, accuracy: 1e-9)
+        // Stays continuous after many turns instead of snapping back to [0, 2π).
+        let wound = -10 * Double.pi
+        XCTAssertEqual(RadialGeometry.rotation(to: 0, count: 6, from: wound), wound, accuracy: 1e-9)
+    }
     func testStalePasteboardCannotActivateMenu() {
         var tracker = DragSessionTracker(pasteboardCount: 7)
         XCTAssertFalse(tracker.update(buttonDown: true,pasteboardCount:7,hasFiles:true))

@@ -94,10 +94,14 @@ struct SignatureCapture: View {
                     ZStack {
                         if let cleaned {
                             Image(nsImage: NSImage(cgImage: cleaned, size: .zero)).resizable().scaledToFit()
+                                .transition(.opacity)
                         } else {
                             SignaturePad(hasContent: { hasDrawing = $0 }, register: { pad = $0 })
+                                .transition(.opacity)
                         }
                     }
+                    // Pad and imported photo cross-fade; a new threshold swaps at once.
+                    .motion(Motion.quick, value: cleaned == nil)
                     .frame(height: 150)
                     .background(.white.opacity(0.6), in: RoundedRectangle(cornerRadius: 8))
                     .overlay(RoundedRectangle(cornerRadius: 8).strokeBorder(.black.opacity(0.12), lineWidth: 0.7))
@@ -112,6 +116,7 @@ struct SignatureCapture: View {
                             Slider(value: $threshold, in: 0.3...0.95).controlSize(.mini).tint(accent)
                                 .onChange(of: threshold) { _ in refreshImported() }
                         }.help(Text("help.signatureThreshold"))
+                        .transition(Motion.appear)
                     }
                     HStack(spacing: 8) {
                         Button("signature.clear") { clear() }.buttonStyle(ReferenceActionButton())
@@ -134,7 +139,8 @@ struct SignatureCapture: View {
                                                 .background(.white.opacity(0.65), in: RoundedRectangle(cornerRadius: 6))
                                         }
                                         .buttonStyle(.plain)
-                                        .contextMenu { Button("signature.delete", role: .destructive) { store.remove(id: id); stored = store.load() } }
+                                        .contextMenu { Button("signature.delete", role: .destructive) { store.remove(id: id); withAnimation(Motion.smooth) { stored = store.load() } } }
+                                        .transition(Motion.appear)
                                         .help(Text("help.signatureReuse"))
                                     }
                                 }
@@ -142,6 +148,8 @@ struct SignatureCapture: View {
                         }.frame(height: 48)
                     }
                 }.padding(.horizontal, 18).padding(.top, 14)
+                .motion(Motion.smooth, value: imported != nil)
+                .motion(Motion.smooth, value: stored.isEmpty)
                 Spacer(minLength: 10)
             }
         }

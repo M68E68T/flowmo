@@ -72,6 +72,17 @@ public enum RadialGeometry {
         if angle < 0 { angle += 2 * .pi }
         return Int(angle / step) % count
     }
+    /// Clockwise angle (radians, AppKit's counter-clockwise positive) that turns
+    /// sector 0 onto sector `index`, continued from `current` the short way
+    /// round, so the highlight never sweeps across the whole wheel.
+    public static func rotation(to index: Int, count: Int, from current: Double) -> Double {
+        guard count > 0 else { return current }
+        let target = -2 * Double.pi * Double(index) / Double(count)
+        var delta = (target - current).truncatingRemainder(dividingBy: 2 * .pi)
+        if delta > .pi { delta -= 2 * .pi }
+        if delta < -.pi { delta += 2 * .pi }
+        return current + delta
+    }
     public static func frame(around point: CGPoint, size: CGSize, in screen: CGRect) -> CGRect {
         let x = min(max(point.x - size.width / 2, screen.minX), max(screen.minX, screen.maxX - size.width))
         let y = min(max(point.y - size.height / 2, screen.minY), max(screen.minY, screen.maxY - size.height))
