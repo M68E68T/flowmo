@@ -16,8 +16,9 @@ und `dist`.
 
 1. `FLowmo-….zip` herunterladen und per Doppelklick entpacken.
 2. `FLowmo.app` in den Ordner **Programme** ziehen.
-3. Beim ersten Mal **Rechtsklick → „Öffnen“** (warum, steht unter
-   [„Was beim Empfänger passiert“](#was-beim-empfänger-passiert)).
+3. Beim ersten Start einmal freigeben: Warnung mit **„Fertig“** schließen, dann
+   **Systemeinstellungen → Datenschutz & Sicherheit → „Dennoch öffnen“**
+   (Details unter [„Was beim Empfänger passiert“](#was-beim-empfänger-passiert)).
 
 Läuft ab macOS 13 auf Apple-Silicon- und Intel-Macs.
 
@@ -229,17 +230,28 @@ Das erzeugt `dist/FLowmo-0.4.0.zip`. Verpackt wird mit `ditto`, nicht mit
 ### Was beim Empfänger passiert
 
 Die App ist **ad hoc signiert**, also nicht mit einer Developer ID von Apple.
-Ein Doppelklick schlägt deshalb fehl mit einer Meldung wie „FLowmo kann nicht
-geöffnet werden, da Apple sie nicht auf Schadsoftware überprüfen konnte."
+Beim ersten Doppelklick zeigt macOS deshalb „„FLowmo“ nicht geöffnet – Apple
+konnte nicht überprüfen, ob „FLowmo“ frei von Schadsoftware ist" mit den
+Knöpfen „In den Papierkorb legen“ und „Fertig“.
 
-Der funktionierende Weg, einmal pro Rechner:
+Der funktionierende Weg, einmal pro Mac (macOS 15 Sequoia und neuer):
 
-1. **Rechtsklick** auf FLowmo.app → **„Öffnen"**
-2. Im Dialog nochmals **„Öffnen"** klicken
+1. In der Warnung **„Fertig“** klicken – **nicht** „In den Papierkorb legen“.
+2. **Systemeinstellungen → Datenschutz & Sicherheit** öffnen und ganz nach
+   unten scrollen. Dort steht „„FLowmo“ wurde blockiert …“ mit dem Knopf
+   **„Dennoch öffnen“**.
+3. FLowmo erneut öffnen, im Dialog nochmals **„Dennoch öffnen“** wählen und mit
+   Passwort oder Touch ID bestätigen.
 
-Falls das bei neueren macOS-Versionen nicht genügt:
-**Systemeinstellungen → Datenschutz & Sicherheit** → dort erscheint nach dem
-Versuch ein Knopf **„Dennoch öffnen"**.
+Unter macOS 13 und 14 geht es auch kürzer: **Rechtsklick** auf FLowmo.app →
+**„Öffnen“** → im Dialog nochmals **„Öffnen“**. Ab macOS 15 gibt es diesen
+Knopf nicht mehr.
+
+Wer das Terminal kennt, kann die Sperre stattdessen direkt entfernen:
+
+```bash
+xattr -dr com.apple.quarantine /Applications/FLowmo.app
+```
 
 ### Ehrlich dazu
 
@@ -255,7 +267,8 @@ nur so:
 | Ticket ans Bundle heften (`stapler`) | ein Befehl |
 
 Danach öffnet die App sich beim Empfänger mit einem normalen Doppelklick. Für
-den Kreis von Freunden ist der Rechtsklick-Weg meist die pragmatischere Wahl.
+den Kreis von Freunden ist der Weg über die Systemeinstellungen meist die
+pragmatischere Wahl.
 
 Veröffentlicht wird über GitHub Releases: <https://github.com/M68E68T/flowmo/releases>.
 Eine Windows-Version ist nicht enthalten.
