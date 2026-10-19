@@ -76,8 +76,8 @@ final class RadialMenuView: NSView {
         guard window != nil, let layer else { return }
         let fade = CATransition()
         fade.type = .fade
-        fade.duration = Motion.reduced ? 0.12 : 0.18
-        fade.timingFunction = CAMediaTimingFunction(name: .easeInEaseOut)
+        fade.duration = Motion.reduced ? Motion.Duration.reduced : Motion.Duration.fade
+        fade.timingFunction = Motion.easeInOut
         layer.add(fade, forKey: "actions")
     }
     private func refreshHighlight() {
@@ -315,8 +315,8 @@ private final class RadialHighlightView: NSView {
         let fade = CABasicAnimation(keyPath: "opacity")
         fade.fromValue = group.presentation()?.opacity ?? group.opacity
         fade.toValue = target
-        fade.duration = visible ? 0.10 : 0.14
-        fade.timingFunction = CAMediaTimingFunction(name: .easeOut)
+        fade.duration = Motion.Duration.short
+        fade.timingFunction = visible ? Motion.easeOut : Motion.easeIn
         CATransaction.begin(); CATransaction.setDisableActions(true)
         group.opacity = target
         CATransaction.commit()

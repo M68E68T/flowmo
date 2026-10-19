@@ -14,8 +14,31 @@ enum Motion {
     /// Default for anything that appears or disappears in place.
     static let appear = AnyTransition.opacity.combined(with: .scale(scale: 0.96))
 
+    /// Durations for the AppKit and Core Animation side, by role rather than
+    /// by number, so a panel and a SwiftUI view fade with the same timing.
+    enum Duration {
+        /// Something leaving because the user is done with it; never in the way.
+        static let short = 0.11
+        /// What every fade shortens to under Reduce Motion.
+        static let reduced = 0.12
+        /// Swapping one content for another in place.
+        static let fade = 0.18
+        /// A panel or surface arriving.
+        static let present = 0.2
+    }
+    /// Arrivals decelerate, departures accelerate, swaps do both.
+    static let easeOut = CAMediaTimingFunction(name: .easeOut)
+    static let easeIn = CAMediaTimingFunction(name: .easeIn)
+    static let easeInOut = CAMediaTimingFunction(name: .easeInEaseOut)
+
     /// AppKit side of the same setting; SwiftUI views read the environment instead.
     static var reduced: Bool { NSWorkspace.shared.accessibilityDisplayShouldReduceMotion }
+
+    /// `withAnimation` that honours Reduce Motion, for state changed in code
+    /// rather than bound to a view: the change still shows, nothing travels.
+    static func animate<Result>(_ animation: Animation, _ body: () throws -> Result) rethrows -> Result {
+        try withAnimation(reduced ? .easeOut(duration: Duration.reduced) : animation, body)
+    }
 
     /// Same character as `snappy`, for Core Animation.
     static func spring(_ keyPath: String) -> CASpringAnimation {

@@ -52,13 +52,13 @@ final class GlobalDragController {
         if let layer = panel.contentView?.layer, !Motion.reduced {
             let shrink = CABasicAnimation(keyPath: "transform")
             shrink.toValue = Self.scale(0.97, around: layer.bounds)
-            shrink.duration = 0.11
+            shrink.duration = Motion.Duration.short
             shrink.fillMode = .forwards; shrink.isRemovedOnCompletion = false
             layer.add(shrink, forKey: "dismiss")
         }
         NSAnimationContext.runAnimationGroup({ context in
-            context.duration = 0.11
-            context.timingFunction = CAMediaTimingFunction(name: .easeIn)
+            context.duration = Motion.Duration.short
+            context.timingFunction = Motion.easeIn
             panel.animator().alphaValue = 0
         }, completionHandler: { panel.orderOut(nil) })
     }
@@ -143,8 +143,8 @@ final class GlobalDragController {
             layer.add(grow, forKey: "present")
         }
         NSAnimationContext.runAnimationGroup { context in
-            context.duration = Motion.reduced ? 0.1 : 0.16
-            context.timingFunction = CAMediaTimingFunction(name: .easeOut)
+            context.duration = Motion.reduced ? Motion.Duration.reduced : Motion.Duration.present
+            context.timingFunction = Motion.easeOut
             panel.animator().alphaValue = preferences.menuOpacity
         }
         report?(tr("status.menuOpen", urls.count))

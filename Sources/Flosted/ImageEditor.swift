@@ -119,7 +119,7 @@ struct ImageEditor: View {
                         RoundedRectangle(cornerRadius:5).fill(LinearGradient(colors:[color(presets[index].0),color(presets[index].1)],startPoint:.topLeading,endPoint:.bottomTrailing))
                             .overlay { if index == 0 { RoundedRectangle(cornerRadius:5).fill(RadialGradient(colors:[.purple.opacity(0.8),.clear],center:.bottomTrailing,startRadius:0,endRadius:30)) } }
                             .frame(width:25,height:27).overlay(RoundedRectangle(cornerRadius:5).strokeBorder(selectedPreset == index ? accent : Color.white.opacity(0.35),lineWidth:selectedPreset == index ? 1.6 : 0.6))
-                    }.buttonStyle(.plain).accessibilityLabel(Text(tr("editor.gradient", index + 1)))
+                    }.buttonStyle(ReferencePlainButton()).accessibilityLabel(Text(tr("editor.gradient", index + 1)))
                         .help(Text("help.presets"))
                 }
                         // -2 marks a chosen backdrop; it gets the same ring as the presets.
@@ -128,7 +128,7 @@ struct ImageEditor: View {
                                 .background(.black.opacity(0.07),in:RoundedRectangle(cornerRadius:5))
                                 .overlay(RoundedRectangle(cornerRadius:5).strokeBorder(selectedPreset == -2 ? accent : Color.white.opacity(0.35),lineWidth:selectedPreset == -2 ? 1.6 : 0.6))
                         }
-                            .buttonStyle(.plain).accessibilityLabel(Text("editor.chooseBackdrop"))
+                            .buttonStyle(ReferencePlainButton()).accessibilityLabel(Text("editor.chooseBackdrop"))
                             .help(Text("help.chooseBackdrop"))
                     }
                     HStack(spacing:5) {
@@ -136,7 +136,7 @@ struct ImageEditor: View {
                             Button { first=color(solids[index]);gradient=false;third=nil;backdrop=nil;backdropVersion += 1;selectedPreset=100+index } label: {
                                 RoundedRectangle(cornerRadius:5).fill(color(solids[index])).frame(width:25,height:25)
                                     .overlay(RoundedRectangle(cornerRadius:5).strokeBorder(selectedPreset == 100+index ? accent : Color.white.opacity(0.35),lineWidth:selectedPreset == 100+index ? 1.6 : 0.6))
-                            }.buttonStyle(.plain).accessibilityLabel(Text(tr("editor.solidColor", index + 1)))
+                            }.buttonStyle(ReferencePlainButton()).accessibilityLabel(Text(tr("editor.solidColor", index + 1)))
                                 .help(Text("help.solids"))
                         }
                         ColorPicker("editor.customColor",selection:$first,supportsOpacity:false).labelsHidden().frame(width:25,height:25)
@@ -168,16 +168,19 @@ struct ImageEditor: View {
                 // next to the error would describe a file that cannot be saved.
                 if previewError == nil {
                     Text(tr("editor.estimatedSize", ByteCountFormatter.string(fromByteCount: Int64(compressedBytes), countStyle: .file)))
-                        .font(.subheadline)
+                        .font(.subheadline).transition(.opacity)
                 }
                 if let previewError {
                     Text(previewError).font(.system(size: 10)).foregroundStyle(accent)
-                        .fixedSize(horizontal: false, vertical: true)
+                        .fixedSize(horizontal: false, vertical: true).transition(.opacity)
                 } else if targetKB > 0 {
                     Text(tr("editor.effectiveQuality", Int((effectiveQuality * 100).rounded())))
-                        .font(.system(size: 10)).foregroundStyle(.secondary)
+                        .font(.system(size: 10)).foregroundStyle(.secondary).transition(.opacity)
                 }
             }
+            // Error and estimate swap with a fade; the numbers themselves update
+            // live while a slider moves.
+            .motion(Motion.quick, value: previewError)
             // Labelled like the sliders: with a value always present the field's
             // own placeholder never shows, which left it unexplained before.
             VStack(alignment: .leading, spacing: 4) {
@@ -314,7 +317,15 @@ struct CropCanvas: NSViewRepresentable {
 }
 final class CropSelectionView: NSView {
     var image: CGImage?
-    var selection = CGRect(x: 0, y: 0, width: 1, height: 1)
+    /// Where the crop is. `displayed` is where it is drawn: the two differ only
+    /// while a change from outside (ratio, reset, typed size) glides over, so
+    /// the frame visibly travels instead of jumping. Gestures stay 1:1.
+    var selection = CGRect(x: 0, y: 0, width: 1, height: 1) { didSet { if selection != oldValue { follow() } } }
+    private(set) var displayed = CGRect(x: 0, y: 0, width: 1, height: 1)
+    private var glide: (from: CGRect, start: CFTimeInterval)?
+    private var timer: Timer?
+    var clock: () -> CFTimeInterval = CACurrentMediaTime
+    static let glideDuration = 0.3
     var ratio = 0.0
     var changed: ((CGRect) -> Void)?
     private enum Gesture {
@@ -342,6 +353,7 @@ final class CropSelectionView: NSView {
                       width: selection.width * area.width, height: selection.height * area.height)
     }
     override func mouseDown(with event: NSEvent) {
+        settle()   // a grab lands on the frame where it really is
         let point = convert(event.locationInWindow, from: nil)
         // Grips protrude beyond the image, so test them before the image/body.
         if let handle = CropGeometry.handle(at: point, in: cropRect) { gesture = .resize(handle, cropRect) }
@@ -372,12 +384,42 @@ final class CropSelectionView: NSView {
         let rect = imageRect
         return CGPoint(x: min(rect.maxX,max(rect.minX,point.x)), y: min(rect.maxY,max(rect.minY,point.y)))
     }
+    /// Starts from wherever the frame is drawn now, so a new target picked
+    /// mid-glide bends the path instead of restarting it.
+    private func follow() {
+        guard gesture == nil, window != nil, !Motion.reduced, displayed != selection else { settle(); return }
+        glide = (displayed, clock())
+        guard timer == nil else { return }
+        let timer = Timer(timeInterval: 1.0 / 60, repeats: true) { [weak self] _ in
+            MainActor.assumeIsolated { self?.step() }
+        }
+        RunLoop.main.add(timer, forMode: .common)
+        self.timer = timer
+    }
+    func step() {
+        guard let glide else { settle(); return }
+        let t = clock() - glide.start
+        guard t < Self.glideDuration else { settle(); return }
+        // Critically damped spring, normalised to land exactly at the end:
+        // no overshoot, the same character as Motion.snappy.
+        func curve(_ t: Double) -> Double { 1 - (1 + 20 * t) * exp(-20 * t) }
+        let p = curve(t) / curve(Self.glideDuration)
+        func mix(_ a: CGFloat, _ b: CGFloat) -> CGFloat { a + (b - a) * p }
+        displayed = CGRect(x: mix(glide.from.minX, selection.minX), y: mix(glide.from.minY, selection.minY),
+                           width: mix(glide.from.width, selection.width), height: mix(glide.from.height, selection.height))
+        needsDisplay = true
+    }
+    private func settle() {
+        glide = nil; timer?.invalidate(); timer = nil
+        displayed = selection; needsDisplay = true
+    }
+    override func viewDidMoveToWindow() { super.viewDidMoveToWindow(); if window == nil { settle() } }
     override func draw(_ dirtyRect: NSRect) {
         guard let image, let context = NSGraphicsContext.current?.cgContext else { return }
         let area = imageRect
         context.draw(image, in: area)
-        let crop = CGRect(x: area.minX + selection.minX*area.width, y: area.minY + selection.minY*area.height,
-            width: selection.width*area.width, height: selection.height*area.height)
+        let crop = CGRect(x: area.minX + displayed.minX*area.width, y: area.minY + displayed.minY*area.height,
+            width: displayed.width*area.width, height: displayed.height*area.height)
         let mask = NSBezierPath(rect: area); mask.appendRect(crop); mask.windingRule = .evenOdd
         NSColor.black.withAlphaComponent(0.55).setFill(); mask.fill()
         let orange=NSColor(calibratedRed:0.89,green:0.23,blue:0,alpha:1)

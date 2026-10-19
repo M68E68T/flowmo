@@ -56,7 +56,7 @@ struct IntroView: View {
     }
     private func go(to next: Int) {
         forward = next > card
-        withAnimation(Motion.smooth) { card = next }
+        Motion.animate(Motion.smooth) { card = next }
     }
 
     private func heading(_ key: String, _ symbol: String) -> some View {

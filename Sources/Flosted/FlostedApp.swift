@@ -357,8 +357,8 @@ final class AppController: NSObject, NSApplicationDelegate, ObservableObject {
         panel.orderFrontRegardless()
         toast = panel
         NSAnimationContext.runAnimationGroup { context in
-            context.duration = 0.22
-            context.timingFunction = CAMediaTimingFunction(name: .easeOut)
+            context.duration = Motion.Duration.present
+            context.timingFunction = Motion.easeOut
             panel.animator().alphaValue = 1
             panel.animator().setFrame(rest, display: true)
         }
@@ -367,7 +367,8 @@ final class AppController: NSObject, NSApplicationDelegate, ObservableObject {
     private func dismissToast(_ panel: NSPanel) {
         if toast === panel { toast = nil }
         NSAnimationContext.runAnimationGroup({ context in
-            context.duration = 0.2
+            context.duration = Motion.Duration.fade
+            context.timingFunction = Motion.easeIn
             panel.animator().alphaValue = 0
         }, completionHandler: { panel.orderOut(nil) })
     }

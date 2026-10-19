@@ -24,6 +24,8 @@ struct PageManager: View {
     @State private var selection: Set<ObjectIdentifier> = []
     @State private var dragging: ObjectIdentifier?
     @State private var hovered: ObjectIdentifier?
+    /// Pointer hover, separate from `hovered`, which tracks the drop target.
+    @State private var pointerOver: ObjectIdentifier?
     @State private var beforeDrag: [PageThumb]?
     @State private var importing = false
     @State private var importTask: Task<Void, Never>?
@@ -98,6 +100,7 @@ struct PageManager: View {
     private func thumbnail(_ thumb: PageThumb) -> some View {
         let index = thumbs.firstIndex { $0.id == thumb.id }
         let isSelected = selection.contains(thumb.id)
+        let isDragged = dragging == thumb.id
         return VStack(spacing: 5) {
             ZStack {
                 if let preview = thumb.preview {
@@ -107,12 +110,22 @@ struct PageManager: View {
             .frame(width: 104, height: 132)
             .background(.white.opacity(0.7), in: RoundedRectangle(cornerRadius: 6))
             .overlay(RoundedRectangle(cornerRadius: 6)
-                .strokeBorder(isSelected ? accent : .black.opacity(0.14), lineWidth: isSelected ? 2 : 0.7))
+                .strokeBorder(isSelected ? accent : .black.opacity(pointerOver == thumb.id ? 0.28 : 0.14),
+                              lineWidth: isSelected ? 2 : 0.7))
             Text(verbatim: "\((index ?? 0) + 1)").font(.system(size: 10)).monospacedDigit()
                 .foregroundStyle(isSelected ? accent : .secondary)
         }
+        // While dragged, the page stays behind as a faint placeholder that moves
+        // through the grid, so the landing spot is visible before the drop.
+        .opacity(isDragged ? 0.35 : 1)
+        .scaleEffect(isDragged ? 0.96 : 1)
         .motion(Motion.quick, value: isSelected)
+        .motion(Motion.quick, value: pointerOver == thumb.id)
+        .motion(Motion.snappy, value: isDragged)
         .contentShape(Rectangle())
+        .onHover { inside in
+            if inside { pointerOver = thumb.id } else if pointerOver == thumb.id { pointerOver = nil }
+        }
         .overlay(PageDragSource(image: thumb.preview, label: tr("pages.page", (index ?? 0) + 1),
                                 token: thumb.id.debugDescription, selected: isSelected,
             clicked: { flags in
@@ -174,7 +187,7 @@ struct PageManager: View {
     private func deleteSelected() {
         let keep = thumbs.filter { !selection.contains($0.id) }
         guard !keep.isEmpty else { return }
-        withAnimation(Motion.smooth) {
+        Motion.animate(Motion.smooth) {
             thumbs = keep
             selection = []
         }
@@ -219,7 +232,7 @@ struct PageManager: View {
             let added = report.0.map(PageThumb.init)
             if !added.isEmpty {
                 let at = min(max(index ?? thumbs.count, 0), thumbs.count)
-                withAnimation(Motion.smooth) {
+                Motion.animate(Motion.smooth) {
                     thumbs.insert(contentsOf: added, at: at)
                     selection = Set(added.map(\.id))
                 }
@@ -267,7 +280,7 @@ private struct ThumbDropDelegate: DropDelegate {
         guard !info.hasItemsConforming(to: [.fileURL]), let dragging, dragging != target,
               let from = thumbs.firstIndex(where: { $0.id == dragging }),
               let to = thumbs.firstIndex(where: { $0.id == target }) else { return }
-        withAnimation(Motion.snappy) {
+        Motion.animate(Motion.snappy) {
             thumbs.move(fromOffsets: IndexSet(integer: from), toOffset: to > from ? to + 1 : to)
         }
     }

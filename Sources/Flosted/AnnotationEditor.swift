@@ -103,7 +103,7 @@ struct AnnotationEditor: View {
         .background(EditorCommandBridge(commands: EditorWindowCommands(
             canUndo: { !saving && textRequest == nil && signatureTarget == nil && (history.canUndo || history.current != annotations) },
             canRedo: { !saving && textRequest == nil && signatureTarget == nil && history.canRedo },
-            undo: undo, redo: redo, fit: { zoom = nil }, zoom: step))
+            undo: undo, redo: redo, fit: { setZoom(nil) }, zoom: step))
             .frame(width: 0, height: 0).accessibilityHidden(true))
         .sheet(item: $signatureTarget) { target in
             SignatureCapture(store: store, accent: accent) { id in
@@ -194,7 +194,7 @@ struct AnnotationEditor: View {
             }
             .contentShape(Rectangle())
         }
-        .buttonStyle(.plain)
+        .buttonStyle(ReferencePlainButton())
         .keyboardShortcut(item.shortcut, modifiers: [])
         .help(Text(tr(item.helpKey) + "  (" + item.shortcutLabel + ")"))
     }
@@ -242,25 +242,25 @@ struct AnnotationEditor: View {
     private var zoomControls: some View {
         HStack(spacing: 5) {
             Button { step(-1) } label: { Image(systemName: "minus.magnifyingglass") }
-                .buttonStyle(.plain).keyboardShortcut("-", modifiers: .command)
-            Button("editor.zoomFit") { zoom = nil }
+                .buttonStyle(ReferencePlainButton(backdrop: true)).keyboardShortcut("-", modifiers: .command)
+            Button("editor.zoomFit") { setZoom(nil) }
                 .buttonStyle(ReferenceActionButton(primary: zoom == nil))
                 .keyboardShortcut("0", modifiers: .command)
             Text(zoom == nil ? tr("editor.zoomFitShort") : "\(Int((zoom ?? 1) * 100)) %")
                 .font(.system(size: 10)).monospacedDigit().frame(width: 52)
                 .contentTransition(.opacity).motion(Motion.quick, value: zoom)
             Button { step(1) } label: { Image(systemName: "plus.magnifyingglass") }
-                .buttonStyle(.plain).keyboardShortcut("+", modifiers: .command)
+                .buttonStyle(ReferencePlainButton(backdrop: true)).keyboardShortcut("+", modifiers: .command)
         }.help(Text("help.zoom"))
     }
 
     private var pageStrip: some View {
         HStack(spacing: 8) {
             Button { page = max(0, page - 1) } label: { Image(systemName: "chevron.left") }
-                .buttonStyle(.plain).disabled(page == 0)
+                .buttonStyle(ReferencePlainButton(backdrop: true)).disabled(page == 0)
             Text(tr("editor.pageOf", page + 1, source.pageCount)).font(.system(size: 10)).monospacedDigit()
             Button { page = min(source.pageCount - 1, page + 1) } label: { Image(systemName: "chevron.right") }
-                .buttonStyle(.plain).disabled(page >= source.pageCount - 1)
+                .buttonStyle(ReferencePlainButton(backdrop: true)).disabled(page >= source.pageCount - 1)
             Spacer()
             Text(tr("editor.elementsOnPage", annotations.on(page: page).count))
                 .font(.system(size: 10)).foregroundStyle(.secondary)
@@ -393,8 +393,12 @@ struct AnnotationEditor: View {
     private func step(_ direction: Int) {
         let steps = AnnotationLayout.zoomSteps
         let currentValue = zoom ?? 1
-        if direction > 0 { zoom = steps.first { $0 > currentValue + 0.001 } ?? steps.last }
-        else { zoom = steps.last { $0 < currentValue - 0.001 } ?? steps.first }
+        if direction > 0 { setZoom(steps.first { $0 > currentValue + 0.001 } ?? steps.last) }
+        else { setZoom(steps.last { $0 < currentValue - 0.001 } ?? steps.first) }
+    }
+    /// The page grows or shrinks into its new size instead of jumping to it.
+    private func setZoom(_ next: Double?) {
+        Motion.animate(Motion.snappy) { zoom = next }
     }
 
     private func save() {

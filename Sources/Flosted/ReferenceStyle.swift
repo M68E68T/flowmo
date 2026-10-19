@@ -69,6 +69,7 @@ struct ReferenceSegments: View {
     let values: [(String, Double)]
     @Binding var selection: Double
     @Namespace private var indicator
+    @State private var hovered: Double?
     var body: some View {
         HStack(spacing: 1) {
             ForEach(values, id: \.0) { label, value in
@@ -82,13 +83,19 @@ struct ReferenceSegments: View {
                             if selection == value {
                                 RoundedRectangle(cornerRadius: 4).fill(ReferenceStyle.accent)
                                     .matchedGeometryEffect(id: "selection", in: indicator)
+                            } else if hovered == value {
+                                RoundedRectangle(cornerRadius: 4).fill(Color.black.opacity(0.06))
                             }
                         }
                         .contentShape(Rectangle())
+                        .onHover { inside in
+                            if inside { hovered = value } else if hovered == value { hovered = nil }
+                        }
                 }.buttonStyle(.plain)
             }
         }.padding(2).background(.black.opacity(0.065), in: RoundedRectangle(cornerRadius: 6))
         .motion(Motion.snappy, value: selection)
+        .motion(Motion.quick, value: hovered)
     }
 }
 
@@ -244,7 +251,7 @@ struct ModifierPicker: View {
                                     in: RoundedRectangle(cornerRadius: 6))
                         .contentShape(Rectangle())
                 }
-                .buttonStyle(PressScale())
+                .buttonStyle(ReferencePlainButton())
                 .accessibilityLabel(Text(LocalizedStringKey(entry.name)))
                 .accessibilityAddTraits(on ? .isSelected : [])
             }
@@ -253,11 +260,38 @@ struct ModifierPicker: View {
     }
 }
 
-/// Plain look, but the key gives a little under the finger.
-private struct PressScale: ButtonStyle {
+/// For buttons that draw their own shape (tools, keys, swatches) or are a bare
+/// icon. Both give a little under the finger; a shape darkens on hover, a bare
+/// icon gets a backdrop like a toolbar item. The backdrop extends past the
+/// label without taking layout space, so nothing around it moves.
+struct ReferencePlainButton: ButtonStyle {
+    var backdrop = false
     func makeBody(configuration: Configuration) -> some View {
+        PlainButtonBody(configuration: configuration, backdrop: backdrop)
+    }
+}
+
+private struct PlainButtonBody: View {
+    let configuration: ButtonStyleConfiguration
+    let backdrop: Bool
+    @Environment(\.isEnabled) private var isEnabled
+    @State private var hovering = false
+    var body: some View {
         configuration.label
+            .background {
+                if backdrop {
+                    RoundedRectangle(cornerRadius: 5)
+                        .fill(Color.black.opacity(configuration.isPressed ? 0.13 : (hovering ? 0.08 : 0)))
+                        .padding(-4)
+                }
+            }
+            .brightness(!backdrop && hovering ? -0.05 : 0)
             .scaleEffect(configuration.isPressed ? 0.94 : 1)
+            .opacity(isEnabled ? 1 : 0.4)
+            .contentShape(Rectangle())
+            .onHover { hovering = $0 && isEnabled }
+            .motion(Motion.quick, value: hovering)
             .motion(Motion.snappy, value: configuration.isPressed)
+            .motion(Motion.quick, value: isEnabled)
     }
 }

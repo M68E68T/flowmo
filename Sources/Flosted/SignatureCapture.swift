@@ -138,8 +138,8 @@ struct SignatureCapture: View {
                                                 .frame(width: 92, height: 42)
                                                 .background(.white.opacity(0.65), in: RoundedRectangle(cornerRadius: 6))
                                         }
-                                        .buttonStyle(.plain)
-                                        .contextMenu { Button("signature.delete", role: .destructive) { store.remove(id: id); withAnimation(Motion.smooth) { stored = store.load() } } }
+                                        .buttonStyle(ReferencePlainButton())
+                                        .contextMenu { Button("signature.delete", role: .destructive) { store.remove(id: id); Motion.animate(Motion.smooth) { stored = store.load() } } }
                                         .transition(Motion.appear)
                                         .help(Text("help.signatureReuse"))
                                     }

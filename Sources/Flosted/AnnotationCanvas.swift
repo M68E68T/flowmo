@@ -215,6 +215,17 @@ final class AnnotationCanvasView: NSView {
         committed?(annotations)
     }
 
+    /// Blends the next drawing over the current one. Drawing itself stays
+    /// immediate, so strokes and handles never trail the pointer.
+    func crossfade() {
+        guard window != nil else { return }
+        wantsLayer = true
+        let fade = CATransition()
+        fade.type = .fade
+        fade.duration = Motion.reduced ? Motion.Duration.reduced : Motion.Duration.fade
+        fade.timingFunction = Motion.easeInOut
+        layer?.add(fade, forKey: "page")
+    }
     override func draw(_ dirtyRect: NSRect) {
         guard let context = NSGraphicsContext.current?.cgContext else { return }
         let area = contentRect
@@ -270,6 +281,8 @@ struct AnnotationCanvas: NSViewRepresentable {
 
     func makeNSView(context: Context) -> AnnotationCanvasView { AnnotationCanvasView(frame: .zero) }
     func updateNSView(_ view: AnnotationCanvasView, context: Context) {
+        // A new page or its freshly rendered backdrop cross-fades in place.
+        if view.page != page || (view.backdrop != nil && view.backdrop !== backdrop) { view.crossfade() }
         view.backdrop = backdrop
         if view.annotations != annotations { view.annotations = annotations }
         view.signatures = signatures
