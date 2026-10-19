@@ -1,4 +1,4 @@
-# Flosted 0.3
+# FLowmo 0.4
 
 Native Mac-App mit schwebendem Kreis-Menü für lokale Dateikonvertierung.
 Eigenständige Implementierung nach der bereitgestellten Tangerine-Videovorlage.
@@ -9,6 +9,17 @@ verwendet eine einfarbige, an helle und dunkle Hintergründe angepasste Variante
 Alle Varianten entstehen aus derselben skalierbaren Zeichenquelle. Der App-Build
 erzeugt die macOS-Icondatei automatisch; generierte Grafiken bleiben in `.build`
 und `dist`.
+
+## Download
+
+**Neueste Version: [github.com/M68E68T/flowmo/releases/latest](https://github.com/M68E68T/flowmo/releases/latest)**
+
+1. `FLowmo-….zip` herunterladen und per Doppelklick entpacken.
+2. `FLowmo.app` in den Ordner **Programme** ziehen.
+3. Beim ersten Mal **Rechtsklick → „Öffnen“** (warum, steht unter
+   [„Was beim Empfänger passiert“](#was-beim-empfänger-passiert)).
+
+Läuft ab macOS 13 auf Apple-Silicon- und Intel-Macs.
 
 ## Oberfläche nach der Videovorlage
 
@@ -36,8 +47,10 @@ Danach erscheint sie nicht mehr von selbst. Über das Menüleisten-Symbol →
 
 ## Schnellstart
 
-Die bereits gebaute App liegt in **dist/Flosted.app**. Per Doppelklick öffnen.
-Das Fenster darf geschlossen werden: Flosted bleibt in der Menüleiste aktiv.
+Die bereits gebaute App liegt in **dist/FLowmo.app**. Per Doppelklick öffnen.
+Das Fenster darf geschlossen werden: FLowmo bleibt in der Menüleiste aktiv.
+Beim ersten Start werden Einstellungen, Einleitungsstatus und gespeicherte
+Unterschriften aus der bisherigen App automatisch übernommen.
 
 1. Im Finder eine Bild- oder PDF-Datei mit gedrückter Maustaste ziehen.
 2. Währenddessen die Auslösetaste drücken (ab Werk **Shift**). Das orange
@@ -82,6 +95,7 @@ App-Fenster.
 | Standbild | PNG, JPG, HEIC, TIFF, BMP, PDF |
 | PDF | Alle Seiten einzeln als JPG/PNG; TXT und DOCX |
 | TXT, Markdown, RTF, DOCX | PDF, TXT, DOCX |
+| Einzelnes Textdokument, Werkzeugtaste | Fortlaufend bearbeiten, PDF und DOCX sichern |
 | Einzelnes Bild, Werkzeugtaste | Zuschnitt, Hintergrund, Kompression, Bearbeiten |
 | Einzelnes PDF, Werkzeugtaste | Bearbeiten (Text, Signatur, Schwärzen), Seiten verwalten |
 
@@ -104,6 +118,25 @@ Bilddateien werden abgelehnt statt still auf das erste Bild reduziert.
 
 ## Bearbeiten und Signieren
 
+„Bearbeiten“ öffnet zuerst eine fortlaufende Textansicht. PDF-Text wird übernommen;
+bei Scans und Bildern erkennt FLowmo den Text lokal. Du schreibst direkt auf den
+Dokumentseiten und kannst Schriftart, Größe, Farbe, Fett/Kursiv/Unterstreichen,
+Absatzausrichtung und Listen ändern. Der Text fließt automatisch auf weitere
+A4-Seiten. Die Textansicht startet bei lesbaren 100 %. Einpassen zeigt die ganze
+Seite; Einpassen und Zoom ändern nur die Ansicht.
+
+Die Textansicht vereinfacht das ursprüngliche Layout. Abbildungen, Diagramme und
+Tabellen werden nicht nachgebaut; OCR-Ergebnisse bitte auf Fehler prüfen. Über
+„Original markieren“ wechselst du zur unveränderten Seitenansicht mit den unten
+beschriebenen Werkzeugen. Beide Ansichten behalten ihre eigenen Entwürfe und
+Rückgängig-Verläufe. Gesichert wird die gerade sichtbare Ansicht; Markierungen
+werden nicht automatisch auf den neu umbrochenen Text übertragen.
+
+In der Textansicht wählst du unten PDF oder DOCX und klickst auf „Sichern“ (⌘S).
+Es entsteht eine neue Datei neben dem Original; der Editor bleibt offen. DOCX
+lässt sich in FLowmo wieder bearbeiten. Schließen oder Beenden fragt bei
+ungesicherten Änderungen nach. Ohne Sichern wird keine Ausgabedatei angelegt.
+
 Einzelne Bilder und PDFs lassen sich mit der Werkzeugtaste unter „Bearbeiten"
 mit Text, Unterschrift, Pfeilen, Rahmen, Hervorhebungen und Schwärzungen
 versehen. Alles wird **fest eingebrannt**; das Original bleibt unverändert.
@@ -125,7 +158,7 @@ versehen. Alles wird **fest eingebrannt**; das Original bleibt unverändert.
   Signatur-Werkzeug tauscht sie aus. Was in der Vorschau steht, wird beim
   Sichern genau so geschrieben.
 - **Schwärzen entfernt Text wirklich.** Ein schwarzer Balken allein würde
-  nichts nützen: Der Text bliebe im PDF und wäre weiterhin kopierbar. Flosted
+  nichts nützen: Der Text bliebe im PDF und wäre weiterhin kopierbar. FLowmo
   rechnet eine geschwärzte Seite deshalb zu einem Bild um. Diese Seite ist
   danach nicht mehr durchsuchbar — darauf wird im Editor hingewiesen.
 - Seiten **ohne** Schwärzung behalten ihre Textebene: Text bleibt scharf,
@@ -162,7 +195,7 @@ Details: docs/VALIDATION.md.
 ## In Cursor weiterarbeiten
 
 Diesen Ordner öffnen. Codex liest AGENTS.md und docs/PROJECT_BRIEF.md.
-Quellen: Sources/Flosted (App/UI) und Sources/FlostedCore (Verarbeitung).
+Quellen: Sources/FLowmo (App/UI) und Sources/FLowmoCore (Verarbeitung).
 
 ```bash
 bash scripts/build-app.sh
@@ -190,18 +223,18 @@ Paket erstellen:
 bash scripts/package.sh
 ```
 
-Das erzeugt `dist/Flosted-0.4.0.zip`. Verpackt wird mit `ditto`, nicht mit
+Das erzeugt `dist/FLowmo-0.4.0.zip`. Verpackt wird mit `ditto`, nicht mit
 `zip` — ein gewöhnliches `zip` zerstört die Bundle-Struktur und die Signatur.
 
 ### Was beim Empfänger passiert
 
 Die App ist **ad hoc signiert**, also nicht mit einer Developer ID von Apple.
-Ein Doppelklick schlägt deshalb fehl mit einer Meldung wie „Flosted kann nicht
+Ein Doppelklick schlägt deshalb fehl mit einer Meldung wie „FLowmo kann nicht
 geöffnet werden, da Apple sie nicht auf Schadsoftware überprüfen konnte."
 
 Der funktionierende Weg, einmal pro Rechner:
 
-1. **Rechtsklick** auf Flosted.app → **„Öffnen"**
+1. **Rechtsklick** auf FLowmo.app → **„Öffnen"**
 2. Im Dialog nochmals **„Öffnen"** klicken
 
 Falls das bei neueren macOS-Versionen nicht genügt:
@@ -224,5 +257,5 @@ nur so:
 Danach öffnet die App sich beim Empfänger mit einem normalen Doppelklick. Für
 den Kreis von Freunden ist der Rechtsklick-Weg meist die pragmatischere Wahl.
 
-Es wurde nichts auf GitHub veröffentlicht; das Repository liegt nur lokal.
+Veröffentlicht wird über GitHub Releases: <https://github.com/M68E68T/flowmo/releases>.
 Eine Windows-Version ist nicht enthalten.

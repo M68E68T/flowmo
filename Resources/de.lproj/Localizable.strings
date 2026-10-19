@@ -1,7 +1,7 @@
 /* Menüleiste und Hauptmenü */
-"menu.open" = "Flosted öffnen";
+"menu.open" = "FLowmo öffnen";
 "menu.settings" = "Einstellungen …";
-"menu.quit" = "Flosted beenden";
+"menu.quit" = "FLowmo beenden";
 "menu.file" = "Datei";
 "menu.chooseFiles" = "Dateien auswählen …";
 
@@ -32,7 +32,7 @@
 "status.unsupportedDrag" = "Bitte Bilder, PDFs oder Textdokumente desselben Typs ziehen.";
 "status.noTools" = "Für diese Auswahl sind keine Bildwerkzeuge verfügbar.";
 "status.menuOpen" = "Kreis-Menü geöffnet · %d Datei(en)";
-"status.convertedWithErrors" = "Konvertierung mit Fehlern · Flosted öffnen";
+"status.convertedWithErrors" = "Konvertierung mit Fehlern · FLowmo öffnen";
 
 /* Einstellungen */
 "settings.title" = "Einstellungen";
@@ -76,7 +76,7 @@
 "error.tooLarge" = "Die Bildabmessungen sind zu groß. Bitte eine kleinere Datei verwenden.";
 
 /* Beispielbild */
-"sample.headline" = "Hallo, Flosted.";
+"sample.headline" = "Hallo, FLowmo.";
 "sample.subline" = "Ziehen. Taste. Fertig.";
 
 /* Editor-Aktionen */
@@ -84,7 +84,7 @@
 "editor.apply" = "Übernehmen";
 "editor.save" = "Sichern";
 
-"menu.wheelLabel" = "Flosted Formatmenü";
+"menu.wheelLabel" = "FLowmo Formatmenü";
 
 /* Editor-Beschriftungen, die bisher englisch geblieben waren */
 "editor.padding" = "Rand";
@@ -189,8 +189,8 @@
 
 /* Einleitung */
 "menu.intro" = "Einleitung";
-"intro.title" = "Willkommen bei Flosted";
-"intro.welcome.body" = "Flosted sitzt in der Menüleiste und arbeitet direkt im Finder mit.";
+"intro.title" = "Willkommen bei FLowmo";
+"intro.welcome.body" = "FLowmo sitzt in der Menüleiste und arbeitet direkt im Finder mit.";
 "intro.welcome.point1" = "Bilder, PDFs und Textdokumente umwandeln.";
 "intro.welcome.point2" = "Zuschneiden, Hintergrund, Komprimieren, Text und Unterschrift.";
 "intro.welcome.point3" = "Alles bleibt auf deinem Mac. Nichts wird hochgeladen, Originale bleiben unverändert.";
@@ -204,7 +204,7 @@
 "intro.try.step1" = "Zeig das Beispielbild im Finder.";
 "intro.try.step2" = "Zieh es und drück dabei %@.";
 "intro.try.step3" = "Lass es auf „JPG“ los. Die Kopie liegt daneben.";
-"intro.try.note" = "Flosted bleibt in der Menüleiste aktiv. Dort findest du Einstellungen und diese Einleitung.";
+"intro.try.note" = "FLowmo bleibt in der Menüleiste aktiv. Dort findest du Einstellungen und diese Einleitung.";
 "intro.revealSample" = "Beispiel im Finder zeigen";
 "help.revealSample" = "Legt ein Beispielbild an und zeigt es im Finder, damit du das Rad ohne eigene Datei ausprobieren kannst.";
 "intro.back" = "Zurück";
@@ -250,3 +250,36 @@
 "settings.toolsDisabledHint" = "Ohne Zusatztaste sind die Werkzeuge beim Finder-Ziehen deaktiviert. Im App-Fenster bleiben sie verfügbar.";
 "editor.effectiveQuality" = "Wirksame Qualität mit Größenlimit: %d %%";
 "pages.page" = "Seite %d";
+
+/* Fortlaufende Textbearbeitung */
+"menu.close" = "Fenster schließen";
+"document.title" = "Bearbeiten";
+"document.mode" = "Bearbeitungsansicht";
+"document.textMode" = "Text bearbeiten";
+"document.originalMode" = "Original markieren";
+"document.layoutNote" = "Textansicht · Layout vereinfacht, Abbildungen bleiben im Original.";
+"document.ocrNote" = "Text lokal erkannt · Bitte auf Erkennungsfehler prüfen.";
+"document.importing" = "Text wird übernommen …";
+"document.importCancelled" = "Textübernahme abgebrochen. Das Original ist unverändert.";
+"document.retry" = "Erneut übernehmen";
+"document.font" = "Schriftart";
+"document.fontSize" = "Schriftgröße in Punkt";
+"document.bold" = "Fett (⌘B)";
+"document.italic" = "Kursiv (⌘I)";
+"document.underline" = "Unterstrichen (⌘U)";
+"document.color" = "Textfarbe";
+"document.alignLeft" = "Linksbündig";
+"document.alignCenter" = "Zentriert";
+"document.alignRight" = "Rechtsbündig";
+"document.alignJustified" = "Blocksatz";
+"document.list" = "Absatzliste";
+"document.listNone" = "Keine Liste";
+"document.listBullet" = "Aufzählung";
+"document.listNumbered" = "Nummerierung";
+"document.pageCount" = "%d Seite(n)";
+"document.textPage" = "Dokumenttext, Seite %d";
+"document.outputFormat" = "Ausgabeformat";
+"document.unsavedTitle" = "Ungesicherte Änderungen";
+"document.unsavedMessage" = "Deine Änderungen an Text oder Originalmarkierungen wurden noch nicht vollständig gesichert.";
+"document.keepEditing" = "Weiterbearbeiten";
+"document.discard" = "Änderungen verwerfen";

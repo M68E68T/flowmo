@@ -25,19 +25,24 @@ validate_icon() {
   fi
 }
 validate_icon "$PROJECT_ROOT/Resources/$ICON_FILE"
-swift build -c release --cache-path "$PROJECT_ROOT/.build/cache" --config-path "$PROJECT_ROOT/.build/config" --security-path "$PROJECT_ROOT/.build/security" "$@"
-APP_PATH="$PROJECT_ROOT/dist/Flosted.app"
+SWIFT_BUILD=(swift build -c release --cache-path "$PROJECT_ROOT/.build/cache" --config-path "$PROJECT_ROOT/.build/config" --security-path "$PROJECT_ROOT/.build/security" "$@")
+"${SWIFT_BUILD[@]}"
+# Ask SwiftPM where it put the binary: a universal build (--arch arm64
+# --arch x86_64) lands somewhere else than a plain one.
+BIN_PATH="$("${SWIFT_BUILD[@]}" --show-bin-path)"
+APP_PATH="$PROJECT_ROOT/dist/FLowmo.app"
+rm -rf "$APP_PATH"
 mkdir -p "$APP_PATH/Contents/MacOS" "$APP_PATH/Contents/Resources"
-cp "$PROJECT_ROOT/.build/release/Flosted" "$APP_PATH/Contents/MacOS/Flosted"
+cp "$BIN_PATH/FLowmo" "$APP_PATH/Contents/MacOS/FLowmo"
 cp "$PROJECT_ROOT/Resources/Info.plist" "$APP_PATH/Contents/Info.plist"
 cp "$PROJECT_ROOT/Resources/$ICON_FILE" "$APP_PATH/Contents/Resources/$ICON_FILE"
 # Render the shared vector artwork at every standard macOS icon resolution.
 # The generator, PNGs and ICNS are build artifacts, never source assets.
 swiftc -swift-version 5 -O -module-cache-path "$CLANG_MODULE_CACHE_PATH" \
-  "$PROJECT_ROOT/Sources/Flosted/BrandMark.swift" \
+  "$PROJECT_ROOT/Sources/FLowmo/BrandMark.swift" \
   "$PROJECT_ROOT/scripts/GenerateAppIcon.swift" -o "$ICON_BUILD/generate-app-icon"
-"$ICON_BUILD/generate-app-icon" "$ICON_BUILD/Flosted.iconset"
-iconutil -c icns "$ICON_BUILD/Flosted.iconset" -o "$APP_PATH/Contents/Resources/$ICON_FILE"
+"$ICON_BUILD/generate-app-icon" "$ICON_BUILD/FLowmo.iconset"
+iconutil -c icns "$ICON_BUILD/FLowmo.iconset" -o "$APP_PATH/Contents/Resources/$ICON_FILE"
 validate_icon "$APP_PATH/Contents/Resources/$ICON_FILE"
 # Localizations: SwiftUI string literals resolve against Bundle.main.
 # Lint first - macOS silently discards a malformed .strings file as a whole,

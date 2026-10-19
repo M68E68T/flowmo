@@ -40,7 +40,7 @@ Datum: 18.10.2026. Apple-Silicon-Mac, Swift 6.3.2, Sprachmodus Swift 5.
   Ergebnis zurück, und erkennt Text auf einer Seite, die ihn nur als Bild
   trägt. Auf diesem Mac sind PNG, JPG, HEIC, TIFF, BMP und AVIF als Encoder
   vorhanden; WebP kann macOS nur lesen, nicht schreiben.
-- Zusätzlich einmalig gegen echte Dateien in ~/Documents/Flosted-Abnahme
+- Zusätzlich einmalig gegen echte Dateien in ~/Documents/FLowmo-Abnahme
   gefahren (Vertrag.pdf mit ALPHA/BETA/GAMMA, Foto.png, Gross.jpg, Scan.pdf):
   Schwärzen entfernte BETA und ließ ALPHA und GAMMA stehen, Annotieren erhielt
   die Textebene, Seiten ließen sich umsortieren/drehen/löschen, das
@@ -134,7 +134,7 @@ Datum: 18.10.2026. Apple-Silicon-Mac, Swift 6.3.2, Sprachmodus Swift 5.
   Durchscheinen nur die Lesbarkeit gekostet hat.
 
 ## Kurzer manueller Abnahmetest
-1. dist/Flosted.app öffnen. Die Finder-Erkennung läuft ab dem Start.
+1. dist/FLowmo.app öffnen. Die Finder-Erkennung läuft ab dem Start.
 2. PNG im Finder ziehen, Shift drücken, auf JPG ziehen und loslassen.
 3. Neue Datei neben Original öffnen; Original darf sich nicht ändern.
 4. Wiederholen: bestehende Ausgabe bleibt erhalten, neue erhält Nummer im Namen.
@@ -207,7 +207,7 @@ Datum: 18.10.2026. Apple-Silicon-Mac, Swift 6.3.2, Sprachmodus Swift 5.
     hintergrund verschwindet, die Striche bleiben.
 25. Eine Stelle schwärzen, speichern, Ergebnis öffnen: dort darf kein Text mehr
     markierbar sein und die PDF-Suche darf das Wort nicht finden.
-26. `defaults delete dev.flosted.prototype FlostedIntroSeen`, App starten:
+26. `defaults delete dev.flowmo.prototype FLowmoIntroSeen`, App starten:
     Einleitung erscheint neben dem Hauptfenster. Durchklicken, auf Karte 2 und 3
     ist das echte Rad zu sehen. „Beispiel laden" schließt sie und legt die Datei
     im Hauptfenster bereit.
@@ -264,7 +264,7 @@ Dateizugriffsgrenzen blieben aktiv. Das lokale Bundle ist nur ad hoc signiert.
 - Release-Build erfolgreich; alle 54 bestehenden Tests bestehen auch nach
   der abschließenden Korrektur der Schatten-Skalierung.
 - Zehn PNG-Repräsentationen von 16 bis 1024 Pixeln mit korrekten Abmessungen
-  erzeugt und als `Flosted.icns` im Bundle hinterlegt. `CFBundleIconFile`
+  erzeugt und als `FLowmo.icns` im Bundle hinterlegt. `CFBundleIconFile`
   verweist darauf; die finale Ad-hoc-Signatur besteht die strenge Prüfung.
 - App-Icon im Finder visuell bestätigt. Größenvergleich für 128, 64, 32 und
   16 Pixel sowie Willkommenszeichen und 18-/36-Pixel-Template auf hellen und
@@ -280,7 +280,7 @@ Dateizugriffsgrenzen blieben aktiv. Das lokale Bundle ist nur ad hoc signiert.
 ## Korrektur des Dock-Symbols vom 19.10.2026
 
 - Doppelten `CFBundleIconFile`-Eintrag entfernt; der verbleibende verweist
-  eindeutig auf `Flosted.icns`. Beim Start setzt die App ihr Symbol ausdrücklich
+  eindeutig auf `FLowmo.icns`. Beim Start setzt die App ihr Symbol ausdrücklich
   aus derselben `BrandMark`-Zeichenquelle wie das gebündelte Icon.
 - Der Build liest den Icon-Dateinamen aus der Plist und dekodiert sowohl die
   Quelldatei als auch die fertige Bundle-Datei. Fehlendes und beschädigtes Icon
@@ -288,7 +288,7 @@ Dateizugriffsgrenzen blieben aktiv. Das lokale Bundle ist nur ad hoc signiert.
 - Release-Build, alle 54 bestehenden Tests, Plist-Prüfung und strenge
   Ad-hoc-Signaturprüfung erfolgreich.
 - Nur das leere Hauptfenster war offen. Die Nutzerinstanz regulär beendet und
-  aus `dist/Flosted.app` neu gestartet; das von `NSRunningApplication.icon`
+  aus `dist/FLowmo.app` neu gestartet; das von `NSRunningApplication.icon`
   gelieferte Bild zeigt das orange-weiße Logo. Die direkte Sichtprüfung im Dock
   und App-Umschalter bleibt offen: Der Fernsteuerungszugriff auf das Dock lief
   in ein Timeout. Es wurden keine Dock-Einstellungen oder System-Caches verändert.
@@ -299,9 +299,9 @@ Dateizugriffsgrenzen blieben aktiv. Das lokale Bundle ist nur ad hoc signiert.
   stehen dort im Abschnitt „Behebungsstand“.
 - Release-Build mit Sprach-Lint und Signatur erfolgreich, ohne Compiler-Warnung.
 - 70 Tests, 0 Fehler. Neu: `UXRegressionTests` (Core, 7 Tests) und das Target
-  `FlostedAppTests` mit `CanvasBehaviorTests` (7 Tests, AppKit-Views offscreen
+  `FLowmoAppTests` mit `CanvasBehaviorTests` (7 Tests, AppKit-Views offscreen
   mit synthetischen Ereignissen).
-- Die Nutzerinstanz wurde regulär beendet und aus `dist/Flosted.app` neu gestartet.
+- Die Nutzerinstanz wurde regulär beendet und aus `dist/FLowmo.app` neu gestartet.
   Die Sichtprüfung am Bildschirm ist offen: Screenshots waren ohne
   Bildschirmaufnahme-Berechtigung nicht möglich, Systemeinstellungen wurden nicht verändert.
 
@@ -338,5 +338,76 @@ Dateizugriffsgrenzen blieben aktiv. Das lokale Bundle ist nur ad hoc signiert.
   Seite wieder aus. Die Quelldatei auf dem Schreibtisch blieb bytegleich;
   vorhandene Nutzer-Ausgaben wurden nicht überschrieben.
 - Die laufende Nutzerinstanz wurde nicht neu gestartet. Für den erneuten
-  Finder-Drag muss die frisch gebaute App aus `dist/Flosted.app` gestartet werden.
+  Finder-Drag muss die frisch gebaute App aus `dist/FLowmo.app` gestartet werden.
 
+## Fortlaufende Textbearbeitung vom 19.10.2026
+
+- „Bearbeiten“ startet mit direkt editierbarem Text. PDF-Textebene bevorzugt,
+  lokale Vision-OCR für Bildseiten und Bilder; TXT/MD/RTF/DOCX ebenfalls als
+  bearbeitbare Dokumente erreichbar. Der Textmodus rekonstruiert Grundformatierung,
+  nicht Bilder, Tabellen oder das ursprüngliche Seitenlayout.
+- Native, verbundene NSTextViews für A4-Seiten, Schrift/Farbe/Fett/Kursiv/
+  Unterstrichen, Absatzausrichtung und Listen. Start bei 100 %, zusätzlich
+  Einpassen und Zoom. TextKit-Geometrie und Glyphenlayout werden für Vorschau und
+  PDF-Ausgabe gemeinsam verwendet. Der Export arbeitet mit einer eigenen Kopie.
+- Text und Originalmarkierungen bleiben beim Umschalten getrennt erhalten.
+  Beide Ansichten behalten eigene Snapshot-Verläufe. PDF/DOCX werden erst beim
+  Sichern als neue Dateien geschrieben; der Editor bleibt danach geöffnet.
+  Schließen und Beenden schützen ungesicherte Änderungen und laufendes Speichern.
+- 15 neue Tests in `DocumentTests` und `DocumentEditingTests`: mehrseitiges
+  Layout und PDF-Textebene, DOCX-Rücklesen inklusive Schrift/Absatz/Unterstreichen,
+  Listen ohne doppelte Marker, Unicode, Snapshot-Verlauf, nativer Textimport und
+  OCR in gemischten PDFs, Abbruch/Leertext/gesperrte PDFs, Original- und
+  Kollisionsschutz, Eingabe/Formatierung/Listenfortsetzung, Zoom, Seitenwachstum
+  und -abbau, Tastaturweiterleitung sowie aktive und inaktive Befehlsbrücken.
+- Vollständige Prüfung im Hauptbaum: **99 Tests, 0 Fehler**. Release-Build mit
+  Sprach- und Plist-Prüfung ohne Compiler-Warnungen erfolgreich; Ad-hoc-Signatur
+  besteht `codesign --verify --deep --strict`.
+- Deutsche Oberfläche in einer getrennten Preview-App mit eigener Bundle-ID,
+  deaktivierter Finder-Erkennung und ausschließlich synthetischen Testdateien
+  geprüft: direkte Texteingabe, Rückgängig-Schaltfläche und Bearbeiten-Menü,
+  PDF-/DOCX-Speichern bei offenbleibendem Editor, Originalansicht, Erhalt eines
+  ungesicherten Textentwurfs beim Ansichtswechsel und der Schließdialog mit
+  „Weiterbearbeiten“/„Änderungen verwerfen“. Die finale 720 × 560-Punkte-Ansicht
+  visuell geprüft; Formatierung, Ansichtswechsel und Speichern bleiben sichtbar.
+- Gefunden und behoben: Ein leerer NSRange verlor bei NSIntersectionRange seine
+  Einfügeposition und entfernte beim Beenden einer Liste den ersten Listenpunkt.
+  Außerdem brauchten rahmenlose Fenster eine ausdrückliche Weiterleitung von
+  Textbefehlen, inaktive Ansichten durften keine Befehlsbrücke löschen, und die
+  Ansichtsbuttons benötigen eigene Beschriftungen für Bedienungshilfen.
+- Tastenkürzel sind mit synthetischen Ereignissen über das tatsächliche
+  ReferenceWindow und NSTextView geprüft. Die Fernsteuerungs-Tastendrücke im
+  sichtbaren Fenster waren nicht zuverlässig nachweisbar; sie gelten deshalb
+  nicht als zusätzliche praktische Tastaturabnahme. Menübefehle und sichtbare
+  Schaltflächen wurden separat erfolgreich bedient.
+- Die gemeldete Bild-PDF zusätzlich lokal per OCR übernommen, mit einem
+  Testzusatz verändert, als PDF und DOCX geschrieben und beide erneut gelesen.
+  Der Zusatz ist in der PDF-Textebene vorhanden. Die Ausgangsdatei blieb
+  bytegleich; sämtliche Prüfausgaben liegen ausschließlich unter `.build`.
+- Deutsch und Englisch bestehen Syntax-, Schlüssel- und Formatargumentprüfungen.
+  Keine neuen Berechtigungen, Bibliotheken oder Uploads. Die normale Nutzerinstanz
+  wurde nicht beendet oder neu gestartet; mehrere Bildschirme und eine echte
+  Benutzer-Tastatur bleiben manuelle Abnahmepunkte.
+
+
+
+## Umbenennung in FLowmo vom 19.10.2026
+
+- Oberfläche in Deutsch und Englisch, App-Bundle und ausführbare Datei,
+  Bundle-ID, Swift-Module, Test-Targets, Icon-Dateiname, Start-/Build-/Paket-
+  skripte, Editor-Aufgaben und Dokumentation verwenden FLowmo.
+- Neue Einstellungen und der Einleitungsstatus verwenden FLowmo-Schlüssel.
+  Frühere Namen bleiben ausschließlich für die Übernahme vorhandener Daten
+  lesbar; aktuelle Einstellungen haben Vorrang. Ein zurückgesetzter
+  Einleitungsstatus wird durch die Übernahme nicht erneut überschrieben.
+- Gespeicherte Unterschriften werden einmalig in den neuen Support-Ordner
+  kopiert. Der bisherige Ordner bleibt unverändert; vorhandene neue Daten
+  werden nicht ersetzt, gelöschte Unterschriften nicht erneut übernommen.
+- Vollständiger Testlauf: **106 Tests, 0 Fehler**, einschließlich vier neuer
+  Prüfungen zur Datenübernahme.
+- Release-Build, Sprach-/Plist-Prüfung und strenge Ad-hoc-Signaturprüfung
+  erfolgreich. Das Paket `dist/FLowmo-0.4.0.zip` enthält das neue App-Bundle.
+- Reguläre bisherige Instanz ohne offene Editoren beendet; neue App gestartet.
+  Fenstername, sichtbarer App-Name, Formatmenü und App-Menü einschließlich
+  „FLowmo beenden“ über die laufende Oberfläche geprüft.
+- Bisherige App-/ZIP-Builds liegen als Sicherung ausschließlich unter `.build`.

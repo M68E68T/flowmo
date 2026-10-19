@@ -2,13 +2,13 @@
 import PackageDescription
 
 let package = Package(
-    name: "Flosted",
+    name: "FLowmo",
     platforms: [.macOS(.v13)],
-    products: [.executable(name: "Flosted", targets: ["Flosted"])],
+    products: [.executable(name: "FLowmo", targets: ["FLowmo"])],
     targets: [
-        .target(name: "FlostedCore"),
-        .executableTarget(name: "Flosted", dependencies: ["FlostedCore"]),
-        .testTarget(name: "FlostedCoreTests", dependencies: ["FlostedCore"]),
-        .testTarget(name: "FlostedAppTests", dependencies: ["Flosted"])
+        .target(name: "FLowmoCore"),
+        .executableTarget(name: "FLowmo", dependencies: ["FLowmoCore"]),
+        .testTarget(name: "FLowmoCoreTests", dependencies: ["FLowmoCore"]),
+        .testTarget(name: "FLowmoAppTests", dependencies: ["FLowmo"])
     ]
 )

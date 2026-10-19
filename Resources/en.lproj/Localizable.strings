@@ -1,7 +1,7 @@
 /* Menu bar and main menu */
-"menu.open" = "Open Flosted";
+"menu.open" = "Open FLowmo";
 "menu.settings" = "Settings…";
-"menu.quit" = "Quit Flosted";
+"menu.quit" = "Quit FLowmo";
 "menu.file" = "File";
 "menu.chooseFiles" = "Choose Files…";
 
@@ -32,7 +32,7 @@
 "status.unsupportedDrag" = "Please drag images, PDFs or text documents of the same type.";
 "status.noTools" = "No image tools are available for this selection.";
 "status.menuOpen" = "Wheel open · %d file(s)";
-"status.convertedWithErrors" = "Conversion finished with errors · open Flosted";
+"status.convertedWithErrors" = "Conversion finished with errors · open FLowmo";
 
 /* Settings */
 "settings.title" = "Settings";
@@ -76,7 +76,7 @@
 "error.tooLarge" = "The image dimensions are too large. Please use a smaller file.";
 
 /* Sample image */
-"sample.headline" = "Hello, Flosted.";
+"sample.headline" = "Hello, FLowmo.";
 "sample.subline" = "Drag. Press. Done.";
 
 /* Editor actions */
@@ -84,7 +84,7 @@
 "editor.apply" = "Apply";
 "editor.save" = "Save";
 
-"menu.wheelLabel" = "Flosted format menu";
+"menu.wheelLabel" = "FLowmo format menu";
 
 /* Editor labels that had stayed English */
 "editor.padding" = "Padding";
@@ -189,8 +189,8 @@
 
 /* Introduction */
 "menu.intro" = "Introduction";
-"intro.title" = "Welcome to Flosted";
-"intro.welcome.body" = "Flosted lives in the menu bar and works right inside Finder.";
+"intro.title" = "Welcome to FLowmo";
+"intro.welcome.body" = "FLowmo lives in the menu bar and works right inside Finder.";
 "intro.welcome.point1" = "Convert images, PDFs and text documents.";
 "intro.welcome.point2" = "Crop, add backgrounds, compress, add text and signatures.";
 "intro.welcome.point3" = "Everything stays on your Mac. Nothing is uploaded, originals stay untouched.";
@@ -204,7 +204,7 @@
 "intro.try.step1" = "Show the sample image in Finder.";
 "intro.try.step2" = "Drag it and press %@ while dragging.";
 "intro.try.step3" = "Let go on “JPG”. The copy appears next to it.";
-"intro.try.note" = "Flosted stays active in the menu bar. Settings and this introduction live there too.";
+"intro.try.note" = "FLowmo stays active in the menu bar. Settings and this introduction live there too.";
 "intro.revealSample" = "Show sample in Finder";
 "help.revealSample" = "Creates a sample image and shows it in Finder so you can try the wheel without your own file.";
 "intro.back" = "Back";
@@ -250,3 +250,36 @@
 "settings.toolsDisabledHint" = "Without an extra key, tools are disabled during Finder drags. They remain available in the app window.";
 "editor.effectiveQuality" = "Effective quality with size limit: %d %%";
 "pages.page" = "Page %d";
+
+/* Flowing text editor */
+"menu.close" = "Close Window";
+"document.title" = "Edit";
+"document.mode" = "Editing view";
+"document.textMode" = "Edit text";
+"document.originalMode" = "Mark up original";
+"document.layoutNote" = "Text view · Simplified layout; illustrations remain in the original.";
+"document.ocrNote" = "Text recognized locally · Please check for recognition errors.";
+"document.importing" = "Importing text …";
+"document.importCancelled" = "Text import cancelled. The original is unchanged.";
+"document.retry" = "Import again";
+"document.font" = "Font family";
+"document.fontSize" = "Font size in points";
+"document.bold" = "Bold (⌘B)";
+"document.italic" = "Italic (⌘I)";
+"document.underline" = "Underline (⌘U)";
+"document.color" = "Text color";
+"document.alignLeft" = "Align left";
+"document.alignCenter" = "Center";
+"document.alignRight" = "Align right";
+"document.alignJustified" = "Justify";
+"document.list" = "Paragraph list";
+"document.listNone" = "No list";
+"document.listBullet" = "Bulleted list";
+"document.listNumbered" = "Numbered list";
+"document.pageCount" = "%d page(s)";
+"document.textPage" = "Document text, page %d";
+"document.outputFormat" = "Output format";
+"document.unsavedTitle" = "Unsaved changes";
+"document.unsavedMessage" = "Your changes to text or original markup have not all been saved yet.";
+"document.keepEditing" = "Keep editing";
+"document.discard" = "Discard changes";
