@@ -31,7 +31,7 @@ struct IntroView: View {
                         case 0: welcome
                         case 1: convertCard
                         case 2: editCard
-                        default: readyCard
+                        default: tryCard
                         }
                     }
                     .id(card)
@@ -84,21 +84,28 @@ struct IntroView: View {
             Spacer(minLength: 0)
         }
     }
+    /// For lists that are not a sequence; numbers would read as steps to follow.
+    private func point(_ symbol: String, _ text: String) -> some View {
+        HStack(alignment: .top, spacing: 9) {
+            Image(systemName: symbol).font(.system(size: 12)).foregroundStyle(accent)
+                .frame(width: 17, height: 17).accessibilityHidden(true)
+            Text(LocalizedStringKey(text)).font(.system(size: 11.5))
+                .fixedSize(horizontal: false, vertical: true)
+            Spacer(minLength: 0)
+        }
+    }
 
+    // The window header already welcomes, so this card opens with the mark alone.
     private var welcome: some View {
         VStack(spacing: 16) {
             Spacer(minLength: 0)
-            VStack(spacing: 10) {
-                Image(nsImage: BrandMark.image(side: 56, style: .mark))
-                    .accessibilityHidden(true)
-                Text("intro.welcome.title").font(.system(size: 16, weight: .semibold))
-                    .multilineTextAlignment(.center)
-            }
+            Image(nsImage: BrandMark.image(side: 56, style: .mark))
+                .accessibilityHidden(true)
             body("intro.welcome.body")
             VStack(alignment: .leading, spacing: 9) {
-                step(1, "intro.welcome.point1")
-                step(2, "intro.welcome.point2")
-                step(3, "intro.welcome.point3")
+                point("arrow.triangle.2.circlepath", "intro.welcome.point1")
+                point("crop", "intro.welcome.point2")
+                point("lock.shield", "intro.welcome.point3")
             }.padding(.horizontal, 10).padding(.top, 4)
             Spacer(minLength: 0)
         }
@@ -125,19 +132,21 @@ struct IntroView: View {
             Spacer(minLength: 0)
         }
     }
-    private var readyCard: some View {
+    /// Practises the real gesture in Finder instead of a click inside Flosted.
+    private var tryCard: some View {
         VStack(spacing: 16) {
             Spacer(minLength: 0)
-            heading("intro.ready.title", "checkmark.circle")
-            body("intro.ready.body")
+            heading("intro.try.title", "hand.point.up.left")
             VStack(alignment: .leading, spacing: 9) {
-                step(1, "intro.ready.point1")
-                step(2, "intro.ready.point2")
-                step(3, "intro.ready.point3")
+                step(1, "intro.try.step1")
+                step(2, tr("intro.try.step2", openKeys))
+                step(3, "intro.try.step3")
             }.padding(.horizontal, 10)
-            Button("intro.loadSample") { controller.loadExample(); finish() }
+            Button("intro.revealSample") { controller.revealExample(); finish() }
                 .buttonStyle(ReferenceActionButton(primary: true))
-                .help(Text("help.trySample")).padding(.top, 6)
+                .help(Text("help.revealSample")).padding(.top, 2)
+            point("menubar.rectangle", "intro.try.note")
+                .foregroundStyle(.secondary).padding(.horizontal, 10).padding(.top, 6)
             Spacer(minLength: 0)
         }
     }

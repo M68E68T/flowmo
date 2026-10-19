@@ -225,20 +225,27 @@ final class AppController: NSObject, NSApplicationDelegate, ObservableObject {
         else { status = tr("status.selected", urls.count) }
     }
     func loadExample() {
-        do {
-            let folder = FileManager.default.temporaryDirectory.appendingPathComponent("Flosted-Beispiel-" + UUID().uuidString)
-            try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
-            let image = NSImage(size: CGSize(width: 960, height: 600))
-            image.lockFocus()
-            NSGradient(starting: .systemOrange, ending: .systemPink)?.draw(in: CGRect(x:0,y:0,width:960,height:600),angle:-30)
-            NSColor.white.setFill(); NSBezierPath(roundedRect: CGRect(x:90,y:90,width:780,height:420),xRadius:28,yRadius:28).fill()
-            (tr("sample.headline") as NSString).draw(at: CGPoint(x:140,y:330),withAttributes:[.font:NSFont.systemFont(ofSize:58,weight:.bold),.foregroundColor:NSColor.black])
-            (tr("sample.subline") as NSString).draw(at: CGPoint(x:145,y:260),withAttributes:[.font:NSFont.systemFont(ofSize:28),.foregroundColor:NSColor.darkGray])
-            image.unlockFocus()
-            guard let data = image.tiffRepresentation, let bitmap = NSBitmapImageRep(data:data), let png = bitmap.representation(using:.png,properties:[:]) else { throw ConversionError.encoding }
-            let file = folder.appendingPathComponent("Flosted-Beispiel.png"); try png.write(to:file)
-            select([file])
-        } catch { failure = error.localizedDescription }
+        do { select([try makeExampleFile()]) } catch { failure = error.localizedDescription }
+    }
+    /// Shows the sample in Finder, so the first try is the real gesture: drag it
+    /// with the trigger keys held, not a click inside Flosted.
+    func revealExample() {
+        do { NSWorkspace.shared.activateFileViewerSelecting([try makeExampleFile()]) }
+        catch { failure = error.localizedDescription; showMain() }
+    }
+    private func makeExampleFile() throws -> URL {
+        let folder = FileManager.default.temporaryDirectory.appendingPathComponent("Flosted-Beispiel-" + UUID().uuidString)
+        try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+        let image = NSImage(size: CGSize(width: 960, height: 600))
+        image.lockFocus()
+        NSGradient(starting: .systemOrange, ending: .systemPink)?.draw(in: CGRect(x:0,y:0,width:960,height:600),angle:-30)
+        NSColor.white.setFill(); NSBezierPath(roundedRect: CGRect(x:90,y:90,width:780,height:420),xRadius:28,yRadius:28).fill()
+        (tr("sample.headline") as NSString).draw(at: CGPoint(x:140,y:330),withAttributes:[.font:NSFont.systemFont(ofSize:58,weight:.bold),.foregroundColor:NSColor.black])
+        (tr("sample.subline") as NSString).draw(at: CGPoint(x:145,y:260),withAttributes:[.font:NSFont.systemFont(ofSize:28),.foregroundColor:NSColor.darkGray])
+        image.unlockFocus()
+        guard let data = image.tiffRepresentation, let bitmap = NSBitmapImageRep(data:data), let png = bitmap.representation(using:.png,properties:[:]) else { throw ConversionError.encoding }
+        let file = folder.appendingPathComponent("Flosted-Beispiel.png"); try png.write(to:file)
+        return file
     }
     func perform(_ action: FileAction, files: [URL], origin: ActionOrigin = .dashboard) {
         guard !busy, !files.isEmpty else { return }
